@@ -25,7 +25,7 @@ def get_table_download_link(df):
     """
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-    href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download csv file</a>'
+    href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download CSV file</a>'
     return href
 
 
@@ -57,7 +57,7 @@ This app provides insights on tweets from the past week that contain a specific 
 
 expander_bar = st.beta_expander("About")
 expander_bar.markdown("""
-* **Python libraries:** base64, pandas, streamlit, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
 """)
 
 
@@ -80,11 +80,20 @@ st.sidebar.header('User Inputs')
 ## User input: specify hashtag or keyword used to search for relevant tweets
 user_word = st.sidebar.text_input("Enter a hashtag or keyword", "#covidcanada")
 
+## User input: select language
+select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
+if select_language == 'English':
+    language = 'en'
+if select_language == 'French':
+    language = 'fr'
+
 ## User input: include retweets or not
 include_retweets = st.sidebar.checkbox('Include retweets in data')
 
-## User input: include retweets or not
-select_language = st.sidebar.button('English')
+## User input: number of tweets to return
+num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 15)
+
+
 
 #-----------------------------------#
 # 3) GET DATA FROM TWITTER API
@@ -108,29 +117,32 @@ api = tw.API(auth, wait_on_rate_limit = True)
 ## Get tweets and store as dataframe
 # Reference: https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/twitter-data-in-python/
 # define parameters for API request
-num_of_tweets = 5
-language = "en"
 
 if include_retweets == False:
-    user_word = user_word + " -filter:retweets"
+    user_word = user_word + ' -filter:retweets'
 
-tweets = tw.Cursor(api.search,
-                    q=user_word,
-                    tweet_mode = 'extended',
-                    lang=language).items(num_of_tweets)
+# Scenario 1: All languages
+if select_language == 'All':
+    tweets = tw.Cursor(api.search,
+                        q=user_word,
+                        tweet_mode = "extended").items(num_of_tweets)
 
+# Scenario 2: Specific language (English or French)
+if select_language != 'All':
+    tweets = tw.Cursor(api.search,
+                        q=user_word,
+                        tweet_mode = "extended",
+                        lang=language).items(num_of_tweets)
+
+# Store as dataframe
 tweet_metadata = [[tweet.created_at, tweet.id, tweet.full_text, tweet.user.screen_name, tweet.retweet_count, tweet.favorite_count] for tweet in tweets]
 df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full_text', 'user', 'rt_count', 'fav_count'])
+
+
 
 #-----------------------------------#
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
-
-## Raw data table
-st.subheader('Raw data')
-st.write(df_tweets)
-st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
-
 
 ## KPI cards
 total_tweets = len(df_tweets['full_text'])
@@ -146,6 +158,10 @@ metric_row(
     }
 )
 
+## Raw data table
+st.subheader('Raw data')
+st.write(df_tweets)
+st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 
 # expander_bar2.markdown("""
