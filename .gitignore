@@ -1,6 +1,7 @@
 # folders
 /data
+/.vscode
 
 # file types
-.yml
-.csv
+*.yml
+*.csv
