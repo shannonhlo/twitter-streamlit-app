@@ -1,3 +1,8 @@
+#------------------------------------#
+# 0) Load dependencies
+## Libraries (8)
+#------------------------------------#
+
 # Load dependencies
 import streamlit as st
 from streamlit_metrics import metric, metric_row
@@ -5,15 +10,8 @@ from PIL import Image
 import pandas as pd
 import datetime as dt
 import base64
-#import matplotlib.pyplot as plt
-#from bs4 import BeautifulSoup
-#import requests
-#import json
-
-import os
 import tweepy as tw
 import yaml
-
 
 # Define functions
 def get_table_download_link(df):
@@ -26,7 +24,6 @@ def get_table_download_link(df):
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
     href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download CSV file</a>'
     return href
-
 
 
 
