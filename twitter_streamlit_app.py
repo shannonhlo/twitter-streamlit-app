@@ -12,7 +12,6 @@ import base64
 
 import os
 import tweepy as tw
-import pandas as pd
 import yaml
 
 
@@ -57,6 +56,7 @@ This app provides insights on tweets from the past week that contain a specific 
 
 expander_bar = st.beta_expander("About")
 expander_bar.markdown("""
+* **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
 * **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
 """)
 
@@ -88,9 +88,11 @@ if select_language == 'French':
     language = 'fr'
 
 ## User input: include retweets or not
+#TODO: understand what retweets actually entails
 include_retweets = st.sidebar.checkbox('Include retweets in data')
 
 ## User input: number of tweets to return
+#TODO: set a cap
 num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 15)
 
 
