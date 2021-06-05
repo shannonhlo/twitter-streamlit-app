@@ -12,13 +12,27 @@ import base64
 
 import os
 import tweepy as tw
+import pandas as pd
 import yaml
+
+import re
+import unicodedata
+import nltk
+from nltk.corpus import stopwords
+
+from sklearn.feature_extraction.text import CountVectorizer
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from textblob import TextBlob
 
 
 # Define functions
 def get_table_download_link(df):
     # Reference: https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    """
+    Generates a link allowing the data in a given panda dataframe to be downloaded
     in:  dataframe
     out: href string
     """
@@ -27,7 +41,28 @@ def get_table_download_link(df):
     href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download CSV file</a>'
     return href
 
+def basic_clean(text):
+    """
+    A simple function to clean up the data. All the words that
+    are not designated as a stop word is then lemmatized after
+    encoding and basic regex parsing are performed.
+    """
+    wnl = nltk.stem.WordNetLemmatizer()
+    stopwords = nltk.corpus.stopwords.words('english')
+    text = (unicodedata.normalize('NFKD', text)
+    .encode('ascii', 'ignore')
+    .decode('utf-8', 'ignore'))
+    words = re.sub(r'[^\w\s]', '', text).split()
+    return [wnl.lemmatize(word) for word in words if word not in stopwords]
 
+def tweets_ngrams(n, top_n):
+    """
+    Generates series of top ngrams
+    n: number of words in the ngram
+    top_n: number of ngrams with highest frequencies
+    """
+    result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
+    return result
 
 
 #------------------------------------#
@@ -141,10 +176,19 @@ tweet_metadata = [[tweet.created_at, tweet.id, tweet.full_text, tweet.user.scree
 df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full_text', 'user', 'rt_count', 'fav_count'])
 
 
+## Create list of tokenized 
+words = basic_clean(''.join(str(df_tweets['full_text'].tolist())))
+
+
 
 #-----------------------------------#
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
+
+## Raw data table
+st.subheader('Raw data')
+st.write(df_tweets)
+st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 ## KPI cards
 total_tweets = len(df_tweets['full_text'])
@@ -160,7 +204,19 @@ metric_row(
     }
 )
 
-## Raw data table
-st.subheader('Raw data')
-st.write(df_tweets)
-st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
+
+## ngrams
+word_series = tweets_ngrams(1, 15)
+bigram_series = tweets_ngrams(2, 15)
+trigram_series = tweets_ngrams(3, 15)
+
+st.subheader('Word Frequencies')
+st.write('Single words')
+st.write(word_series)
+
+st.write('Two words')
+st.write(bigram_series)
+
+st.write('Three words')
+st.write(trigram_series)
+
