@@ -1,3 +1,8 @@
+#------------------------------------#
+# 0) Load dependencies
+## Libraries (8)
+#------------------------------------#
+
 # Load dependencies
 import streamlit as st
 from streamlit_metrics import metric, metric_row
@@ -5,12 +10,6 @@ from PIL import Image
 import pandas as pd
 import datetime as dt
 import base64
-#import matplotlib.pyplot as plt
-#from bs4 import BeautifulSoup
-#import requests
-#import json
-
-import os
 import tweepy as tw
 import pandas as pd
 import yaml
@@ -63,7 +62,6 @@ def tweets_ngrams(n, top_n):
     """
     result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
     return result
-
 
 #------------------------------------#
 # 1) APP TITLE, DESCRIPTION & LAYOUT
