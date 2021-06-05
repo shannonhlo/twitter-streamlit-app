@@ -136,6 +136,7 @@ if select_language != 'All':
 # Store as dataframe
 tweet_metadata = [[tweet.created_at, tweet.id, tweet.full_text, tweet.user.screen_name, tweet.retweet_count, tweet.favorite_count] for tweet in tweets]
 df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full_text', 'user', 'rt_count', 'fav_count'])
+df_tweets['created_dt'] = df_tweets['created_at'].dt.date
 
 
 
@@ -143,7 +144,7 @@ df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
 
-## KPI cards
+
 total_tweets = len(df_tweets['full_text'])
 highest_retweets = max(df_tweets['rt_count'])
 highest_likes = max(df_tweets['fav_count'])
@@ -157,7 +158,22 @@ metric_row(
     }
 )
 
+
 ## Raw data table
-st.subheader('Raw data')
+st.subheader('Raw tweets data')
 st.write(df_tweets)
 st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
+
+
+# Count of tweets
+tweet_ct = len(pd.unique(df_tweets['id']))
+
+
+# Create dataframe with count of unique listings by date
+df_tweets_grouped = df_tweets[['created_dt', 'id']].groupby(['created_dt']).agg(['nunique']).reset_index()
+df_tweets_grouped.columns = ['tweet_date', 'tweets']
+
+st.subheader('Number of tweets over time')
+#st.write(df_tweets_grouped)
+
+st.line_chart(df_tweets_grouped.set_index('tweet_date'))
