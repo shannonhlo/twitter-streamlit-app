@@ -21,6 +21,8 @@ import seaborn as sns
 from textblob import TextBlob
 nltk.download('stopwords')
 import string
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+import matplotlib.pyplot as plt
 
 
 #----------------------------------------------
@@ -152,6 +154,24 @@ def tweets_ngrams(n, top_n, df):
     n: number of words in the ngram
     top_n: number of ngrams with highest frequencies
     """
-    words = text_clean_round2(''.join(str(df['full_text'].tolist())))
+    text = df.clean_text
+    words = text_clean_round2(''.join(str(text.tolist())))
     result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
     return result
+
+
+# Function 7
+#----------------
+# Function to convert  
+def word_cloud(df, wordcloud_words): 
+
+    # convert text_claned to word
+    text = df.clean_text
+    word_list = text_clean_round2(''.join(str(text.tolist())))
+    # initialize an empty string
+    str1 = " " 
+    # return string  
+    str2 = str1.join(word_list)
+    # generate word cloud
+    wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
+    return wordcloud

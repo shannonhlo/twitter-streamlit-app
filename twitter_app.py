@@ -177,7 +177,8 @@ df_new = df_new.rename(columns = {"created_dt": "Date",
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
 
-## KPI cards
+## KPI CARDS
+#----------------------------------------------------------
 total_tweets = len(df_tweets['full_text'])
 highest_retweets = max(df_tweets['rt_count'])
 highest_likes = max(df_tweets['fav_count'])
@@ -191,8 +192,8 @@ metric_row(
     }
 )
 
-## Raw data table
-
+## RAW DATA TABLE
+#----------------------------------------------------------
 if st.checkbox('Show raw Tweets data'):
     st.subheader('Raw data')
     st.write(df_new)
@@ -200,45 +201,84 @@ if st.checkbox('Show raw Tweets data'):
 
 #st.subheader('Raw data')
 #st.write(df_new)
+
+## DOWNLOADABLE DATA
+#----------------------------------------------------------
 st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 
+## TWEETS PER DAY BARCHART
+#----------------------------------------------------------
 
-# Bar chart: number of tweets by day
+# Subtitle
+st.subheader('Number of Tweets by Day')
 
 # Create dataframe with count of unique tweets by date
 tweets_by_day = df_tweets[['created_dt', 'id']].groupby(['created_dt']).agg(['nunique']).reset_index()
 tweets_by_day.columns = ['created_dt', 'id']
 
-st.subheader('Number of Tweets by Day')
 st.bar_chart(tweets_by_day.set_index('created_dt'))
+
+## FEATURE EXTRACTION COUNTS BARCHART? TODO!
+#----------------------------------------------------------
+
+# Subtitle
+st.subheader('Feature Extractions Counts')
 
 # Bar chart: count features
 df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
 
 st.bar_chart(df_count)
 
-## ngrams
-word_series = tf.tweets_ngrams(1, 15, df_tweets)
-bigram_series = tf.tweets_ngrams(2, 15, df_tweets)
-trigram_series = tf.tweets_ngrams(3, 15, df_tweets)
+## NGRAM WORD COUNTS
+#----------------------------------------------------------
 
-st.subheader('Word Frequencies')
-st.write('Single words')
-st.write(word_series)
+# Subtitle
+st.subheader('Word Frequency and Ngrams')
 
-st.write('Two words')
-st.write(bigram_series)
+# User selections
+ngram_option = st.selectbox(
+                'Select the number of ngrams',
+                ('Single', 'Bigram', 'Trigram'))
 
-st.write('Three words')
-st.write(trigram_series)
+# Scenarios
+# Scenario 1: Single ngram
+if ngram_option == 'Single':
+    ngram_num = 1
+    ngram_nm = 'Single Word Frequencies'
 
-# wordcloud: just a test for now... need to change
-txt = df_tweets.clean_text[2]
-wordcloud = WordCloud(max_font_size=100, max_words=100, background_color="white").generate(txt)
+# Scenario 2: Bigrams
+if ngram_option == 'Bigram':
+    ngram_num = 2
+    ngram_nm = 'Bigram Word Frequencies'
+
+# Scenario 3: Trigrams
+if ngram_option == 'Trigram':
+    ngram_num = 3
+    ngram_nm = 'Trigram Word Frequencies'
+
+# Display ngram based on selection
+ngram_visual = tf.tweets_ngrams(ngram_num, 15, df_tweets)
+
+# Conditional subtitle
+st.write(ngram_nm)
+
+# Write word frequencies
+st.write(ngram_visual)
+
+## WORDCLOUD
+#----------------------------------------------------------
+
+# Subtitle
+st.subheader('Word Cloud')
+
+# Number of words
+wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 2)
+
+# Run word cloud function
+wordcloud = tf.word_cloud(df_tweets, wordcloud_words)
 
 # Display the generated image:
-
 st.set_option('deprecation.showPyplotGlobalUse', False)
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
