@@ -1,6 +1,9 @@
 #----------------------------------------------
 # PART 1: LOAD DEPENDENCIES
 #----------------------------------------------
+
+from nltk.featstruct import _default_fs_class
+import twitter_functions as tf # custom functions file
 import streamlit as st
 from streamlit_metrics import metric, metric_row
 from PIL import Image
@@ -20,130 +23,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from textblob import TextBlob
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+import matplotlib.pyplot as plt
+
 
 #----------------------------------------------
 # PART 2: DEFINE VARIABLES & FUNCTIONS
 #----------------------------------------------
 
-# Variables
-stopwords_en = nltk.corpus.stopwords.words('english')
-stopwords_fr = nltk.corpus.stopwords.words('french')
-    
-
-# Function 1
-#-----------------
-def get_table_download_link(df):
-    # Reference: https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-    """
-    Generates a link allowing the data in a given panda dataframe to be downloaded
-    in:  dataframe
-    out: href string
-    """
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-    href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download CSV file</a>'
-    return href
-
-# Function 2
-#-----------------
-def feature_extract(df):
-    #TODO: add emoticons and emojis to this! and other punctuation
-
-    # Create pre-clean character count feature
-    df['character_ct'] = df.full_text.apply(lambda x: len(x))
-    # Create stopword count features (english and french)
-    df['stopword_en_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x in stopwords_en]))
-    df['stopword_fr_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x in stopwords_fr]))
-    # Create hashtag count feature
-    df['hashtag_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('#')]))
-    # Create @ sign count feature
-    df['atsign_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('@')]))
-    # Create link/image  count feature
-    df['link_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('https')]))
-    # Create numeric count feature
-    df['numeric_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.isdigit()]))
-    # Create an uppercase count feature
-    df['uppercase_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.isupper()]))
-    return df
-
-# Function 3a
-#-------------
-def round1_text_clean(text):
-    emoji_pattern = re.compile("["
-                               u"\U0001F600-\U0001F64F"  # emoticons
-                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
-                               u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                               u"\U00002500-\U00002BEF"  # chinese char
-                               u"\U00002702-\U000027B0"
-                               u"\U00002702-\U000027B0"
-                               u"\U000024C2-\U0001F251"
-                               u"\U0001f926-\U0001f937"
-                               u"\U00010000-\U0010ffff"
-                               u"\u2640-\u2642"
-                               u"\u2600-\u2B55"
-                               u"\u200d"
-                               u"\u23cf"
-                               u"\u23e9"
-                               u"\u231a"
-                               u"\ufe0f"  # dingbats
-                               u"\u3030"
-                               "]+", flags=re.UNICODE)
-    text = emoji_pattern.sub(r'', text) # remove emoji
-    text = ' ' + text # added space because there was some weirdness for first word (strip later)
-    text = text.lower() # convert all text to lowercase
-    text = re.sub(r'(\s)@\w+', '', text) # remove whole word if starts with @
-    text = re.sub(r'(\s)\w*\d\w*\w+', '', text) # remove whole word if starts with number
-    text = re.sub(r'https\:\/\/t\.co\/*\w*', '', text) # remove https links
-    text = re.sub('[%s]' % re.escape(string.punctuation), '', text) # removes punctuation
-    text = re.sub('\[.*?\]', '', text) # removes text in square brackets
-    #text = re.sub('\w*\d\w*', '', text) # remove whole word if starts with number
-    #text = re.sub(r'(\s)#\w+', '', text) # remove whole word if starts with #
-    text = text.strip() # strip text
-    return text
-
-# Function 3b
-#-------------
-text_clean_round1 = lambda x: round1_text_clean(x)
-
-# Function 4
-#-------------
-def text_clean_round2(text):
-    """
-    A simple function to clean up the data. All the words that
-    are not designated as a stop word is then lemmatized after
-    encoding and basic regex parsing are performed.
-    """
-    wnl = nltk.stem.WordNetLemmatizer()
-    stopwords = nltk.corpus.stopwords.words('english')
-    text = (unicodedata.normalize('NFKD', text)
-    .encode('ascii', 'ignore')
-    .decode('utf-8', 'ignore'))
-    words = re.sub(r'[^\w\s]', '', text).split()
-    return [wnl.lemmatize(word) for word in words if word not in stopwords]
-
-# Function 5
-#-------------
-def text_clean_round3(text):
-    #TODO: add emoticons and emojis to this!
-    # Load in stopwords
-    stopwords_en = nltk.corpus.stopwords.words('english')
-    stopwords_fr = nltk.corpus.stopwords.words('french')
-    stopwords = stopwords_en + stopwords_fr
-    # Create pre-clean character count feature
-    text = text.apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
-    return text
-
-# Function 6
-#-----------------
-def tweets_ngrams(n, top_n):
-    """
-    Generates series of top ngrams
-    n: number of words in the ngram
-    top_n: number of ngrams with highest frequencies
-    """
-    result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
-    return result
+import twitter_functions as tf # custom functions file
 
 #------------------------------------#
 # 1) APP TITLE, DESCRIPTION & LAYOUT
@@ -182,7 +70,6 @@ col1 = st.sidebar
 col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 
 
-
 #-----------------------------------#
 # 2) SIDEBAR, USER INPUT
 ## User to specify keyword or hashtag
@@ -208,7 +95,6 @@ include_retweets = st.sidebar.checkbox('Include retweets in data')
 ## User input: number of tweets to return
 #TODO: set a cap
 num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 15)
-
 
 
 #-----------------------------------#
@@ -264,22 +150,19 @@ df_tweets['created_time'] = df_tweets['created_at'].dt.time
 df_tweets['clean_text'] = df_tweets.full_text
 
 # Run function #2: Feature extraction
-df_tweets = feature_extract(df_tweets)
+df_tweets = tf.feature_extract(df_tweets)
 
 # Run function #3: Round 1 text cleaning (convert to lower, remove numbers, @, punctuation, numbers. etc.)
-df_tweets['clean_text'] = df_tweets.clean_text.apply(text_clean_round1)
+df_tweets['clean_text'] = df_tweets.clean_text.apply(tf.text_clean_round1)
 
 # Run function #4: Round 2 text cleaning (create list of tokenized words)
 #TODO NOT RUNNING -- FIX?
-#df_tweets.clean_text  = text_clean_round2(df_tweets.clean_text)
+#df_tweets.clean_text  = tf.text_clean_round2(df_tweets.clean_text)
 
 ## Run function #5: Round 3 text cleaning (remove stop words)
-df_tweets.clean_text  = text_clean_round3(df_tweets.clean_text)
+df_tweets.clean_text  = tf.text_clean_round3(df_tweets.clean_text)
 
-## Create list of tokenized 
-words = text_clean_round2(''.join(str(df_tweets['full_text'].tolist())))
-
-# Create another list of words
+# Create list of words
 words2 = df_tweets.clean_text.tolist()
 
 # Cleaned up dataframe
@@ -317,7 +200,8 @@ if st.checkbox('Show raw Tweets data'):
 
 #st.subheader('Raw data')
 #st.write(df_new)
-st.markdown(get_table_download_link(df_tweets), unsafe_allow_html=True)
+st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
+
 
 
 # Bar chart: number of tweets by day
@@ -335,9 +219,9 @@ df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_
 st.bar_chart(df_count)
 
 ## ngrams
-word_series = tweets_ngrams(1, 15)
-bigram_series = tweets_ngrams(2, 15)
-trigram_series = tweets_ngrams(3, 15)
+word_series = tf.tweets_ngrams(1, 15, df_tweets)
+bigram_series = tf.tweets_ngrams(2, 15, df_tweets)
+trigram_series = tf.tweets_ngrams(3, 15, df_tweets)
 
 st.subheader('Word Frequencies')
 st.write('Single words')
@@ -348,3 +232,16 @@ st.write(bigram_series)
 
 st.write('Three words')
 st.write(trigram_series)
+
+# wordcloud: just a test for now... need to change
+txt = df_tweets.clean_text[2]
+wordcloud = WordCloud(max_font_size=100, max_words=100, background_color="white").generate(txt)
+
+# Display the generated image:
+
+st.set_option('deprecation.showPyplotGlobalUse', False)
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+st.write('Word Cloud Generator')
+st.pyplot()

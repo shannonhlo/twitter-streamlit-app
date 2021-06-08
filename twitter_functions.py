@@ -33,6 +33,8 @@ stopwords_en = nltk.corpus.stopwords.words('english')
 # French stopwords
 stopwords_fr = nltk.corpus.stopwords.words('french')
     
+# words
+
 
 #----------------------------------------------
 # DEFINE FUNCTIONS
@@ -64,6 +66,8 @@ def feature_extract(df):
     df['stopword_fr_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x in stopwords_fr]))
     # Create hashtag count feature
     df['hashtag_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('#')]))
+    # Create link count feature
+    df['link_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('https')]))
     # Create @ sign count feature
     df['atsign_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.startswith('@')]))
     # Create numeric count feature
@@ -142,11 +146,12 @@ def text_clean_round3(text):
 
 # Function 6
 #-----------------
-def tweets_ngrams(n, top_n):
+def tweets_ngrams(n, top_n, df):
     """
     Generates series of top ngrams
     n: number of words in the ngram
     top_n: number of ngrams with highest frequencies
     """
+    words = text_clean_round2(''.join(str(df['full_text'].tolist())))
     result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
     return result
