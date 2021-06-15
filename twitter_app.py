@@ -25,6 +25,7 @@ import seaborn as sns
 from textblob import TextBlob
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
+import altair as alt
 
 
 #----------------------------------------------
@@ -230,6 +231,24 @@ df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_
 
 st.bar_chart(df_count)
 
+## SENTIMENT ANALYSIS
+#----------------------------------------------------------
+
+# Subtitle
+st.subheader('Sentiment Analysis')
+
+# Get sentiment scores on raw tweets
+text_sentiment = tf.get_sentiment_scores(df_tweets, 'full_text')
+
+# Add sentiment classification
+text_sentiment = tf.sentiment_classifier(df_tweets, 'compound_score')
+
+# Select columns to output
+df_sentiment = df_tweets[['created_dt', 'full_text', 'sentiment', 'positive_score', 'negative_score', 'neutral_score', 'compound_score']]
+
+# Write dataframe
+st.write(df_sentiment)
+
 ## NGRAM WORD COUNTS
 #----------------------------------------------------------
 
@@ -285,3 +304,5 @@ plt.axis("off")
 plt.show()
 st.write('Word Cloud Generator')
 st.pyplot()
+
+# https://towardsdatascience.com/add-animated-charts-to-your-dashboards-with-streamlit-python-f41863f1ef7c
