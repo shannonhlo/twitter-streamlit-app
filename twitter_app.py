@@ -95,7 +95,7 @@ include_retweets = st.sidebar.checkbox('Include retweets in data')
 
 ## User input: number of tweets to return
 #TODO: set a cap
-num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 15)
+num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
 
 
 #-----------------------------------#
@@ -178,13 +178,19 @@ df_new = df_new.rename(columns = {"created_dt": "Date",
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
 
-## KPI CARDS
 #----------------------------------------------------------
+## SECTION 1: DESCRIPTIVE ANALYSIS
+#----------------------------------------------------------
+
+st.header('Descriptive Analysis')
+
+## 1.1: KPI CARDS
+#----------------------------
 total_tweets = len(df_tweets['full_text'])
 highest_retweets = max(df_tweets['rt_count'])
 highest_likes = max(df_tweets['fav_count'])
 
-st.subheader('Summary')
+st.subheader('Tweet Summary')
 metric_row(
     {
         "Number of tweets": total_tweets,
@@ -193,35 +199,38 @@ metric_row(
     }
 )
 
-## RAW DATA TABLE
-#----------------------------------------------------------
-if st.checkbox('Show raw Tweets data'):
+## 1.2: RAW & DOWNLOADABLE DATA TABLE
+#----------------------------
+
+# Show raw data if selected
+if st.checkbox('Show raw data'):
     st.subheader('Raw data')
     st.write(df_new)
-#st.write(center_info_data)
 
-#st.subheader('Raw data')
-#st.write(df_new)
-
-## DOWNLOADABLE DATA
-#----------------------------------------------------------
+# Click to download raw data as CSV
 st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 
-## TWEETS PER DAY BARCHART
-#----------------------------------------------------------
+## 1.3: TWEETS BY DAY BAR CHART
+#----------------------------
 
 # Subtitle
 st.subheader('Number of Tweets by Day')
 
-# Create dataframe with count of unique tweets by date
-tweets_by_day = df_tweets[['created_dt', 'id']].groupby(['created_dt']).agg(['nunique']).reset_index()
-tweets_by_day.columns = ['created_dt', 'id']
+# Altair chart: number of total tweets by day
+tweets_bar = alt.Chart(df_tweets).mark_bar().encode(
+                    x = alt.X('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets'))#,
+                    #tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+                ).properties(
+                    height = 350
+                ).interactive()
 
-st.bar_chart(tweets_by_day.set_index('created_dt'))
+st.altair_chart(tweets_bar, use_container_width=True)
 
-## FEATURE EXTRACTION COUNTS BARCHART? TODO!
-#----------------------------------------------------------
+
+## 1.4: FEATURE EXTRACTION BAR CHART #TODO FIX THIS
+#----------------------------
 
 # Subtitle
 st.subheader('Feature Extractions Counts')
@@ -231,26 +240,9 @@ df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_
 
 st.bar_chart(df_count)
 
-## SENTIMENT ANALYSIS
-#----------------------------------------------------------
 
-# Subtitle
-st.subheader('Sentiment Analysis')
-
-# Get sentiment scores on raw tweets
-text_sentiment = tf.get_sentiment_scores(df_tweets, 'full_text')
-
-# Add sentiment classification
-text_sentiment = tf.sentiment_classifier(df_tweets, 'compound_score')
-
-# Select columns to output
-df_sentiment = df_tweets[['created_dt', 'full_text', 'sentiment', 'positive_score', 'negative_score', 'neutral_score', 'compound_score']]
-
-# Write dataframe
-st.write(df_sentiment)
-
-## NGRAM WORD COUNTS
-#----------------------------------------------------------
+## 1.5: NGRAM WORD COUNTS
+#----------------------------
 
 # Subtitle
 st.subheader('Word Frequency and Ngrams')
@@ -285,8 +277,8 @@ st.write(ngram_nm)
 # Write word frequencies
 st.write(ngram_visual)
 
-## WORDCLOUD
-#----------------------------------------------------------
+## 1.6: WORDCLOUD
+#----------------------------
 
 # Subtitle
 st.subheader('Word Cloud')
@@ -306,3 +298,95 @@ st.write('Word Cloud Generator')
 st.pyplot()
 
 # https://towardsdatascience.com/add-animated-charts-to-your-dashboards-with-streamlit-python-f41863f1ef7c
+
+## 2.0 SENTIMENT ANALYSIS
+#----------------------------------------------------------
+
+# Subtitle
+st.header('Sentiment Analysis')
+
+# Expander for Methodology
+expander_bar = st.beta_expander("Methodology")
+expander_bar.markdown("""
+* Applying the [VADER Sentiment](https://github.com/cjhutto/vaderSentiment) library to our text data
+* [VADER](https://github.com/cjhutto/vaderSentiment#vader-sentiment-analysis) (**V**alence **A**ware **D**ictionary and s**E**ntiment **R**easoner) = lexicon and rule-based sentiment analysis tool, specifically attuned to sentiments expressed in social media
+* [Compound score](https://github.com/cjhutto/vaderSentiment#about-the-scoring) = computed by summing the valence scores of each word in the lexicon, adjusted according to the rules, and then normalized to be between -1 (most extreme negative) and +1 (most extreme positive)
+* Positive sentiment: compound score >= 0.05
+* Neutral sentiment: (compound score > -0.05) and (compound score < 0.05)
+* Negative sentiment: compound score <= -0.05
+""")
+
+# Get sentiment scores on raw tweets
+text_sentiment = tf.get_sentiment_scores(df_tweets, 'full_text')
+
+# Add sentiment classification
+text_sentiment = tf.sentiment_classifier(df_tweets, 'compound_score')
+
+# Select columns to output
+df_sentiment = df_tweets[['created_at', 'full_text', 'sentiment', 'positive_score', 'negative_score', 'neutral_score', 'compound_score']]
+
+
+## 2.1: SUMMARY CARDS
+#----------------------------
+
+# Show raw data if selected
+sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).transpose()
+
+# Click to download raw data as CSV
+st.subheader('Summary')
+metric_row(
+    {
+        "% Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
+        "% Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
+        "% Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
+    }
+)
+
+## 2.2: RAW & DOWNLOADABLE DATA TABLE
+#----------------------------
+if st.checkbox('Show VADER results for each Tweet'):
+    st.subheader('Raw data')
+    st.write(df_sentiment)
+
+st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
+
+
+## 2.3: SENTIMENT BY DAY BARC HART
+#----------------------------
+import altair as alt
+
+sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
+                    x = alt.X('count(id):Q', stack="normalize", axis = alt.Axis(title = 'Percent of Total Tweets', format='%')),
+                    y = alt.Y('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+                   # y  = alt.Y('sentiment', sort = '-x'),
+                    color=alt.Color('sentiment',
+                        scale=alt.Scale(
+                        domain=['Positive', 'Neutral', 'Negative'],
+                        range=['forestgreen', 'lightgray', 'indianred']))
+                ).properties(
+                    height = 400
+                ).interactive()
+
+# Write the chart
+st.subheader('Classifying Tweet Sentiment by Day')
+st.altair_chart(sentiment_bar, use_container_width=True)
+
+## 2.4: COMPOUND SCORE HISTOGRAM
+#----------------------------
+sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
+                    x = alt.X('compound_score:O', axis = alt.Axis(title = 'VADER Compound Score (Binned)'), bin=alt.Bin(extent=[-1, 1], step=0.25)),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Tweets')),
+                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Average Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+                   # y  = alt.Y('sentiment', sort = '-x'),
+                    color=alt.Color('sentiment',
+                        scale=alt.Scale(
+                        domain=['Positive', 'Neutral', 'Negative'],
+                        range=['forestgreen', 'lightgray', 'indianred']))
+                ).properties(
+                    height = 400
+                ).interactive()
+                
+# Write the chart
+st.subheader('VADER Compound Scores Histogram')
+st.altair_chart(sentiment_histo, use_container_width=True)    

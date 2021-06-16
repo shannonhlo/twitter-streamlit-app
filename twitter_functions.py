@@ -214,7 +214,7 @@ def sentiment_classifier(df, data_column):
         ]
 
     # create a list of the values we want to assign for each condition
-    values = ['positive', 'neutral', 'negative']
+    values = ['Positive', 'Neutral', 'Negative']
     
     # apply
     df['sentiment'] = np.select(conditions, values)
