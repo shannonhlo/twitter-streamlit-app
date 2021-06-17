@@ -11,7 +11,6 @@ import pandas as pd
 import datetime as dt
 import base64
 import tweepy as tw
-import pandas as pd
 import yaml
 import string
 import re
@@ -19,6 +18,7 @@ import unicodedata
 import nltk
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation as LDA
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -351,7 +351,7 @@ if st.checkbox('Show VADER results for each Tweet'):
 st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
 
 
-## 2.3: SENTIMENT BY DAY BARC HART
+## 2.3: SENTIMENT BY DAY BAR CHART
 #----------------------------
 import altair as alt
 
@@ -390,3 +390,14 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
 # Write the chart
 st.subheader('VADER Compound Scores Histogram')
 st.altair_chart(sentiment_histo, use_container_width=True)    
+
+
+## 2.4: TOPIC MODELLING TABLE
+#----------------------------
+
+data = df_tweets['clean_text']
+number_of_topics = 10
+no_top_words = 10
+
+st.subheader('Major Topics')
+st.write(tf.lda_topics(data, number_of_topics, no_top_words))

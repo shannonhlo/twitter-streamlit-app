@@ -8,13 +8,13 @@ import pandas as pd
 import datetime as dt
 import base64
 import tweepy as tw
-import pandas as pd
 import yaml
 import re
 import unicodedata
 import nltk
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation as LDA
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -220,3 +220,45 @@ def sentiment_classifier(df, data_column):
     df['sentiment'] = np.select(conditions, values)
     return df
 
+
+# Function 10
+#----------------
+
+# Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
+
+def lda_topics(data, number_of_topics, no_top_words):
+    # the vectorizer object will be used to transform text to vector form
+    vectorizer = CountVectorizer(max_df=0.9, min_df=25, token_pattern='\w+|\$[\d\.]+|\S+')
+
+    # apply transformation
+    tf = vectorizer.fit_transform(data).toarray()
+
+    # tf_feature_names tells us what word each column in the matrix represents
+    tf_feature_names = vectorizer.get_feature_names()
+
+    model = LDA(n_components=number_of_topics, random_state=0)
+
+    model.fit(tf)
+
+    topic_dict = {}
+    for topic_idx, topic in enumerate(model.components_):
+        topic_dict["Topic %d words" % (topic_idx)]= ['{}'.format(tf_feature_names[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+        topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+    return pd.DataFrame(topic_dict)
+
+
+# Function 11
+#----------------
+
+# Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
+
+def display_topics(model, feature_names, no_top_words):
+    topic_dict = {}
+    for topic_idx, topic in enumerate(model.components_):
+        topic_dict["Topic %d words" % (topic_idx)]= ['{}'.format(feature_names[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+        topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+    return pd.DataFrame(topic_dict)
