@@ -24,7 +24,6 @@ import string
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
 
-
 #----------------------------------------------
 # DEFINE VARIABLES
 #----------------------------------------------
@@ -175,3 +174,49 @@ def word_cloud(df, wordcloud_words):
     # generate word cloud
     wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
     return wordcloud
+
+# Function 8
+#----------------
+
+# Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+sid_analyzer = SentimentIntensityAnalyzer()
+
+# Get sentiment
+def get_sentiment(text:str, analyser,desired_type:str='pos'):
+    # Get sentiment from text
+    sentiment_score = analyser.polarity_scores(text)
+    return sentiment_score[desired_type]
+
+# Get Sentiment scores
+def get_sentiment_scores(df, data_column):
+    df[f'positive_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'pos'))
+    df[f'negative_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'neg'))
+    df[f'neutral_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'neu'))
+    df[f'compound_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'compound'))
+    return df
+
+
+# Function 9
+#----------------
+
+# Credit: https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
+
+# classify based on VADER readme rules
+def sentiment_classifier(df, data_column):
+
+    # create a list of our conditions
+    conditions = [
+        (df[data_column] >= 0.05),
+        (df[data_column] > -0.05) & (df[data_column] < 0.05),
+        (df[data_column] <= -0.05),
+        ]
+
+    # create a list of the values we want to assign for each condition
+    values = ['Positive', 'Neutral', 'Negative']
+    
+    # apply
+    df['sentiment'] = np.select(conditions, values)
+    return df
+
