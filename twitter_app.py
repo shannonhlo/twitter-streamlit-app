@@ -174,6 +174,7 @@ df_new = df_new.rename(columns = {"created_dt": "Date",
                                   "user": "Username", 
                                   "rt_count": "Retweets",  
                                   "fav_count": "Favourites"})
+
 #-----------------------------------#
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
@@ -351,7 +352,7 @@ if st.checkbox('Show VADER results for each Tweet'):
 st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
 
 
-## 2.3: SENTIMENT BY DAY BARC HART
+## 2.3: SENTIMENT BY DAY BAR CHART
 #----------------------------
 import altair as alt
 
@@ -386,7 +387,40 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                 ).properties(
                     height = 400
                 ).interactive()
-                
+
 # Write the chart
 st.subheader('VADER Compound Scores Histogram')
 st.altair_chart(sentiment_histo, use_container_width=True)    
+
+## 2.5: PRINT TOP TWEETS
+#----------------------------
+st.subheader('Analyzing the Most Emotional Tweets')
+
+# Sentiment type
+score_type = st.radio('Choose the sentiment type', ('Positive', 'Neutral', 'Negative'), key = 3)
+
+# Number of tweets
+num_tweets = st.number_input('Choose the top number of tweets', 5, key = 3)
+
+# Scenarios
+# Scenario 1: Positive
+if score_type == 'Positive':
+    score_type_nm= 'positive_score'
+
+# Scenario 2: Neutral
+if score_type == 'Neutral':
+    score_type_nm = 'neutral_score'
+
+# Scenario 3: Negative
+if score_type == 'Negative':
+    score_type_nm = 'negative_score'
+
+# Run the top n tweets
+res1 = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
+
+# Show resuts as a streamlit table
+st.write('Show the top tweets!')
+st.table(res1)
+
+
+

@@ -220,3 +220,13 @@ def sentiment_classifier(df, data_column):
     df['sentiment'] = np.select(conditions, values)
     return df
 
+# Function 10
+#----------------
+
+# Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
+
+def print_top_n_tweets(df, data_column, num_rows):
+    text = 'full_text'
+    top = df.nlargest(num_rows, data_column)
+    top_tweets = top[[data_column,text]]
+    return top_tweets
