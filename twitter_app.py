@@ -234,12 +234,12 @@ st.altair_chart(tweets_bar, use_container_width=True)
 #----------------------------
 
 # Subtitle
-st.subheader('Feature Extractions Counts')
+#st.subheader('Feature Extractions Counts')
 
 # Bar chart: count features
-df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
+#df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
 
-st.bar_chart(df_count)
+#st.bar_chart(df_count)
 
 
 ## 1.5: NGRAM WORD COUNTS
@@ -277,28 +277,6 @@ st.write(ngram_nm)
 
 # Write word frequencies
 st.write(ngram_visual)
-
-## 1.6: WORDCLOUD
-#----------------------------
-
-# Subtitle
-st.subheader('Word Cloud')
-
-# Number of words
-wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 2)
-
-# Run word cloud function
-wordcloud = tf.word_cloud(df_tweets, wordcloud_words)
-
-# Display the generated image:
-st.set_option('deprecation.showPyplotGlobalUse', False)
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-st.write('Word Cloud Generator')
-st.pyplot()
-
-# https://towardsdatascience.com/add-animated-charts-to-your-dashboards-with-streamlit-python-f41863f1ef7c
 
 ## 2.0 SENTIMENT ANALYSIS
 #----------------------------------------------------------
@@ -373,7 +351,68 @@ sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
 st.subheader('Classifying Tweet Sentiment by Day')
 st.altair_chart(sentiment_bar, use_container_width=True)
 
-## 2.4: COMPOUND SCORE HISTOGRAM
+
+## 2.4: ANALYZING TOP TWEETS (wordcloud + top tweets)
+#----------------------------
+st.subheader('Sentiment Wordcloud')
+
+with st.form('Form1'):
+    score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
+    wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
+    num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
+    submitted1 = st.form_submit_button('Generate Wordcloud')
+
+st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
+# Sentiment type
+#score_type = st.radio('Choose the sentiment type', ('All', 'Positive', 'Neutral', 'Negative'), key = 3)
+
+# Number of tweets
+#num_tweets = st.number_input('Choose the top number of tweets', 5, key = 3)
+
+# Number of words
+#wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
+
+# Scenarios
+
+# Scenario 1: All
+if score_type == 'All':
+    score_type_nm= 'compound_score'
+
+# Scenario 2: Positive
+if score_type == 'Positive':
+    score_type_nm= 'positive_score'
+
+# Scenario 3: Neutral
+if score_type == 'Neutral':
+    score_type_nm = 'neutral_score'
+
+# Scenario 4: Negative
+if score_type == 'Negative':
+    score_type_nm = 'negative_score'
+
+# Run wordlcloud for top n tweets
+if score_type == 'All':         
+    wordcloud = tf.word_cloud_all(text_sentiment, wordcloud_words)
+else:
+    wordcloud = tf.word_cloud_sentiment(text_sentiment, score_type_nm, num_tweets, wordcloud_words)
+
+
+# Display the generated wordcloud image:
+st.set_option('deprecation.showPyplotGlobalUse', False)
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+st.write('Word Cloud Generator')
+st.pyplot()
+
+# Run the top n tweets
+top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
+
+# Show resuts as a streamlit table
+st.write('Show the top tweets!')
+st.table(top_tweets_res)
+
+## 2.5: COMPOUND SCORE HISTOGRAM
 #----------------------------
 sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                     x = alt.X('compound_score:O', axis = alt.Axis(title = 'VADER Compound Score (Binned)'), bin=alt.Bin(extent=[-1, 1], step=0.25)),
@@ -391,36 +430,3 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
 # Write the chart
 st.subheader('VADER Compound Scores Histogram')
 st.altair_chart(sentiment_histo, use_container_width=True)    
-
-## 2.5: PRINT TOP TWEETS
-#----------------------------
-st.subheader('Analyzing the Most Emotional Tweets')
-
-# Sentiment type
-score_type = st.radio('Choose the sentiment type', ('Positive', 'Neutral', 'Negative'), key = 3)
-
-# Number of tweets
-num_tweets = st.number_input('Choose the top number of tweets', 5, key = 3)
-
-# Scenarios
-# Scenario 1: Positive
-if score_type == 'Positive':
-    score_type_nm= 'positive_score'
-
-# Scenario 2: Neutral
-if score_type == 'Neutral':
-    score_type_nm = 'neutral_score'
-
-# Scenario 3: Negative
-if score_type == 'Negative':
-    score_type_nm = 'negative_score'
-
-# Run the top n tweets
-res1 = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
-
-# Show resuts as a streamlit table
-st.write('Show the top tweets!')
-st.table(res1)
-
-
-

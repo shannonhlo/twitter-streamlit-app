@@ -158,24 +158,7 @@ def tweets_ngrams(n, top_n, df):
     result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
     return result
 
-
 # Function 7
-#----------------
-# Function to convert  
-def word_cloud(df, wordcloud_words): 
-
-    # convert text_claned to word
-    text = df.clean_text
-    word_list = text_clean_round2(''.join(str(text.tolist())))
-    # initialize an empty string
-    str1 = " " 
-    # return string  
-    str2 = str1.join(word_list)
-    # generate word cloud
-    wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
-    return wordcloud
-
-# Function 8
 #----------------
 
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
@@ -198,7 +181,7 @@ def get_sentiment_scores(df, data_column):
     return df
 
 
-# Function 9
+# Function 8
 #----------------
 
 # Credit: https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
@@ -220,13 +203,47 @@ def sentiment_classifier(df, data_column):
     df['sentiment'] = np.select(conditions, values)
     return df
 
-# Function 10
+# Function 9
 #----------------
 
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
 
-def print_top_n_tweets(df, data_column, num_rows):
+def print_top_n_tweets(df, sent_type, num_rows):
     text = 'full_text'
-    top = df.nlargest(num_rows, data_column)
-    top_tweets = top[[data_column,text]]
+    top = df.nlargest(num_rows, sent_type)
+    top_tweets = top[[sent_type,text]].reset_index()
+    top_tweets = top_tweets.drop(columns = 'index')
+    top_tweets.index = top_tweets.index + 1 
     return top_tweets
+
+# Function 10
+#----------------
+# Function to convert  
+def word_cloud_all(df, wordcloud_words): 
+    # convert text_cleaned to word
+    text = df.clean_text
+    word_list = text_clean_round2(''.join(str(text.tolist())))
+    # initialize an empty string
+    str1 = " " 
+    # return string  
+    str2 = str1.join(word_list)
+    # generate word cloud
+    wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
+    return wordcloud
+
+# Function 11
+#----------------
+# Function to convert  
+def word_cloud_sentiment(df, sent_type, num_rows, wordcloud_words): 
+    # slice df to top n rows for sentiment type selected
+    sliced_df = df.nlargest(num_rows, sent_type)
+    # convert text_cleaned to word
+    text = sliced_df.clean_text
+    word_list = text_clean_round2(''.join(str(text.tolist())))
+    # initialize an empty string
+    str1 = " " 
+    # return string  
+    str2 = str1.join(word_list)
+    # generate word cloud
+    wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
+    return wordcloud
