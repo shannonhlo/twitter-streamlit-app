@@ -270,13 +270,22 @@ if ngram_option == 'Trigram':
     ngram_nm = 'Trigram Word Frequencies'
 
 # Display ngram based on selection
-ngram_visual = tf.tweets_ngrams(ngram_num, 15, df_tweets)
+ngram_visual = tf.tweets_ngrams(ngram_num, 10, df_tweets)
+ngram_visual['ngram'] = ngram_visual.index
 
 # Conditional subtitle
 st.write(ngram_nm)
 
-# Write word frequencies
-st.write(ngram_visual)
+# Altair chart: ngram word frequencies
+ngram_bar = alt.Chart(ngram_visual).mark_bar().encode(
+                    x = alt.X('frequency', axis = alt.Axis(title = 'Word Frequency')),
+                    y = alt.Y('ngram', axis = alt.Axis(title = 'Ngram'), sort = '-x'),
+                    tooltip = [alt.Tooltip('frequency', title = 'Ngram Frequency')],#,  alt.Tooltip('Ngram', title = 'Ngram Word(s)')] ,
+                ).properties(
+                    height = 350
+                )
+
+st.altair_chart(ngram_bar, use_container_width=True)
 
 ## 2.0 SENTIMENT ANALYSIS
 #----------------------------------------------------------
@@ -315,9 +324,9 @@ sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).
 st.subheader('Summary')
 metric_row(
     {
-        "% Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
-        "% Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
-        "% Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
+        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
+        "% 😐 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
+        "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
     }
 )
 
@@ -355,22 +364,13 @@ st.altair_chart(sentiment_bar, use_container_width=True)
 ## 2.4: ANALYZING TOP TWEETS (wordcloud + top tweets)
 #----------------------------
 st.subheader('Sentiment Wordcloud')
+st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
 
 with st.form('Form1'):
     score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
     wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
     num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
-    submitted1 = st.form_submit_button('Generate Wordcloud')
-
-st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
-# Sentiment type
-#score_type = st.radio('Choose the sentiment type', ('All', 'Positive', 'Neutral', 'Negative'), key = 3)
-
-# Number of tweets
-#num_tweets = st.number_input('Choose the top number of tweets', 5, key = 3)
-
-# Number of words
-#wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
+    submitted1 = st.form_submit_button('Regenerate Wordcloud')
 
 # Scenarios
 
@@ -428,5 +428,6 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                 ).interactive()
 
 # Write the chart
-st.subheader('VADER Compound Scores Histogram')
+st.subheader('Checking Sentiment Skewness')
+st.write('VADER Compound Scores Histogram')
 st.altair_chart(sentiment_histo, use_container_width=True)    

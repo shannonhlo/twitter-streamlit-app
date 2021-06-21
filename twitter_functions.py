@@ -1,6 +1,7 @@
 #----------------------------------------------
 # Load dependencies
 #----------------------------------------------
+from nltk.util import bigrams
 import streamlit as st
 from streamlit_metrics import metric, metric_row
 from PIL import Image
@@ -155,7 +156,22 @@ def tweets_ngrams(n, top_n, df):
     """
     text = df.clean_text
     words = text_clean_round2(''.join(str(text.tolist())))
-    result = (pd.Series(nltk.ngrams(words, n)).value_counts())[:top_n]
+    result = (pd.Series(data = nltk.ngrams(words, n), name = 'frequency').value_counts())[:top_n]
+    return result.to_frame()
+
+# Function 6.2
+#-----------------
+def all_ngrams(top_n, df):
+    text = df.clean_text
+    words = text_clean_round2(''.join(str(text.tolist())))
+    unigram = ((pd.Series(data = nltk.ngrams(words, 1), name = 'freq').value_counts())[:top_n]).to_frame()
+    unigram['ngram'] = 'unigram'
+    bigram = ((pd.Series(data = nltk.ngrams(words, 2), name = 'freq').value_counts())[:top_n]).to_frame()
+    bigram['ngram'] = 'bigram'
+    trigram = ((pd.Series(data = nltk.ngrams(words, 3), name = 'freq').value_counts())[:top_n]).to_frame()
+    trigram['ngram'] = 'trigram'
+    result = unigram.append([bigram, trigram])
+    result['ngram_nm'] = result.index
     return result
 
 # Function 7
