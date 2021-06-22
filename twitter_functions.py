@@ -23,6 +23,14 @@ nltk.download('stopwords')
 import string
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
+import gensim
+from gensim.utils import simple_preprocess
+import gensim.corpora as corpora
+from pprint import pprint
+import pyLDAvis.gensim_models
+import pickle 
+import pyLDAvis
+import os
 
 #----------------------------------------------
 # DEFINE VARIABLES
@@ -262,3 +270,48 @@ def display_topics(model, feature_names, no_top_words):
         topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
                         for i in topic.argsort()[:-no_top_words - 1:-1]]
     return pd.DataFrame(topic_dict)
+
+
+# Function 12
+#---------------
+
+def sent_to_words(sentences):
+    for sentence in sentences:
+        # deacc=True removes punctuations
+        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
+
+def LDA_viz(data):
+    data_words = list(sent_to_words(data))
+
+    # Create Dictionary
+    id2word = corpora.Dictionary(data_words)
+    # Create Corpus
+    texts = data_words
+    # Term Document Frequency
+    corpus = [id2word.doc2bow(text) for text in texts]
+
+    # number of topics
+    num_topics = 10
+    # Build LDA model
+    lda_model = gensim.models.LdaMulticore(corpus=corpus,
+                                        id2word=id2word,
+                                        num_topics=num_topics)
+    # Print the Keyword in the 10 topics
+    pprint(lda_model.print_topics())
+    doc_lda = lda_model[corpus]
+
+    # Visualize the topics
+    pyLDAvis.enable_notebook()
+    LDAvis_data_filepath = os.path.join('./results/ldavis_prepared_'+str(num_topics))
+    # # this is a bit time consuming - make the if statement True
+    # # if you want to execute visualization prep yourself
+    if 1 == 1:
+        LDAvis_prepared = pyLDAvis.gensim_models.prepare(lda_model, corpus, id2word)
+        with open(LDAvis_data_filepath, 'wb') as f:
+            pickle.dump(LDAvis_prepared, f)
+    # load the pre-prepared pyLDAvis data from disk
+    with open(LDAvis_data_filepath, 'rb') as f:
+        LDAvis_prepared = pickle.load(f)
+    pyLDAvis.save_html(LDAvis_prepared, './results/ldavis_prepared_'+ str(num_topics) +'.html')
+    
+    return LDAvis_prepared

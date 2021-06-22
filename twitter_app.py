@@ -401,3 +401,5 @@ no_top_words = 10
 
 st.subheader('Major Topics')
 st.write(tf.lda_topics(data, number_of_topics, no_top_words))
+
+st.write(tf.LDA_viz(df_tweets['clean_text']))
