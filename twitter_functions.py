@@ -275,11 +275,13 @@ def display_topics(model, feature_names, no_top_words):
 # Function 12
 #---------------
 
+
 def sent_to_words(sentences):
     for sentence in sentences:
         # deacc=True removes punctuations
         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
 
+#TODO: This function does not work in the streamlit app. Returns "BrokenPipeError: [Errno 32] Broken pipe"
 def LDA_viz(data):
     data_words = list(sent_to_words(data))
 
