@@ -320,7 +320,7 @@ df_sentiment = df_tweets[['created_at', 'full_text', 'sentiment', 'positive_scor
 # Show raw data if selected
 sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).transpose()
 
-# Click to download raw data as CSV
+# Click to download raw data as CSV :)
 st.subheader('Summary')
 metric_row(
     {

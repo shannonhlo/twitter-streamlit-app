@@ -159,7 +159,7 @@ def tweets_ngrams(n, top_n, df):
     result = (pd.Series(data = nltk.ngrams(words, n), name = 'frequency').value_counts())[:top_n]
     return result.to_frame()
 
-# Function 6.2
+# Function 6.2 :)
 #-----------------
 def all_ngrams(top_n, df):
     text = df.clean_text
