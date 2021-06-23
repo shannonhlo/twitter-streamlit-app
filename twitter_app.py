@@ -174,6 +174,7 @@ df_new = df_new.rename(columns = {"created_dt": "Date",
                                   "user": "Username", 
                                   "rt_count": "Retweets",  
                                   "fav_count": "Favourites"})
+
 #-----------------------------------#
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
@@ -233,12 +234,12 @@ st.altair_chart(tweets_bar, use_container_width=True)
 #----------------------------
 
 # Subtitle
-st.subheader('Feature Extractions Counts')
+#st.subheader('Feature Extractions Counts')
 
 # Bar chart: count features
-df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
+#df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
 
-st.bar_chart(df_count)
+#st.bar_chart(df_count)
 
 
 ## 1.5: NGRAM WORD COUNTS
@@ -269,35 +270,22 @@ if ngram_option == 'Trigram':
     ngram_nm = 'Trigram Word Frequencies'
 
 # Display ngram based on selection
-ngram_visual = tf.tweets_ngrams(ngram_num, 15, df_tweets)
+ngram_visual = tf.tweets_ngrams(ngram_num, 10, df_tweets)
+ngram_visual['ngram'] = ngram_visual.index
 
 # Conditional subtitle
 st.write(ngram_nm)
 
-# Write word frequencies
-st.write(ngram_visual)
+# Altair chart: ngram word frequencies
+ngram_bar = alt.Chart(ngram_visual).mark_bar().encode(
+                    x = alt.X('frequency', axis = alt.Axis(title = 'Word Frequency')),
+                    y = alt.Y('ngram', axis = alt.Axis(title = 'Ngram'), sort = '-x'),
+                    tooltip = [alt.Tooltip('frequency', title = 'Ngram Frequency')],#,  alt.Tooltip('Ngram', title = 'Ngram Word(s)')] ,
+                ).properties(
+                    height = 350
+                )
 
-## 1.6: WORDCLOUD
-#----------------------------
-
-# Subtitle
-st.subheader('Word Cloud')
-
-# Number of words
-wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 2)
-
-# Run word cloud function
-wordcloud = tf.word_cloud(df_tweets, wordcloud_words)
-
-# Display the generated image:
-st.set_option('deprecation.showPyplotGlobalUse', False)
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-st.write('Word Cloud Generator')
-st.pyplot()
-
-# https://towardsdatascience.com/add-animated-charts-to-your-dashboards-with-streamlit-python-f41863f1ef7c
+st.altair_chart(ngram_bar, use_container_width=True)
 
 ## 2.0 SENTIMENT ANALYSIS
 #----------------------------------------------------------
@@ -332,13 +320,13 @@ df_sentiment = df_tweets[['created_at', 'full_text', 'sentiment', 'positive_scor
 # Show raw data if selected
 sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).transpose()
 
-# Click to download raw data as CSV
+# Click to download raw data as CSV :)
 st.subheader('Summary')
 metric_row(
     {
-        "% Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
-        "% Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
-        "% Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
+        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
+        "% 😐 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
+        "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
     }
 )
 
@@ -351,7 +339,7 @@ if st.checkbox('Show VADER results for each Tweet'):
 st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
 
 
-## 2.3: SENTIMENT BY DAY BARC HART
+## 2.3: SENTIMENT BY DAY BAR CHART
 #----------------------------
 import altair as alt
 
@@ -372,7 +360,59 @@ sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
 st.subheader('Classifying Tweet Sentiment by Day')
 st.altair_chart(sentiment_bar, use_container_width=True)
 
-## 2.4: COMPOUND SCORE HISTOGRAM
+
+## 2.4: ANALYZING TOP TWEETS (wordcloud + top tweets)
+#----------------------------
+st.subheader('Sentiment Wordcloud')
+st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
+
+with st.form('Form1'):
+    score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
+    wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
+    num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
+    submitted1 = st.form_submit_button('Regenerate Wordcloud')
+
+# Scenarios
+
+# Scenario 1: All
+if score_type == 'All':
+    score_type_nm= 'compound_score'
+
+# Scenario 2: Positive
+if score_type == 'Positive':
+    score_type_nm= 'positive_score'
+
+# Scenario 3: Neutral
+if score_type == 'Neutral':
+    score_type_nm = 'neutral_score'
+
+# Scenario 4: Negative
+if score_type == 'Negative':
+    score_type_nm = 'negative_score'
+
+# Run wordlcloud for top n tweets
+if score_type == 'All':         
+    wordcloud = tf.word_cloud_all(text_sentiment, wordcloud_words)
+else:
+    wordcloud = tf.word_cloud_sentiment(text_sentiment, score_type_nm, num_tweets, wordcloud_words)
+
+
+# Display the generated wordcloud image:
+st.set_option('deprecation.showPyplotGlobalUse', False)
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+st.write('Word Cloud Generator')
+st.pyplot()
+
+# Run the top n tweets
+top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
+
+# Show resuts as a streamlit table
+st.write('Show the top tweets!')
+st.table(top_tweets_res)
+
+## 2.5: COMPOUND SCORE HISTOGRAM
 #----------------------------
 sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                     x = alt.X('compound_score:O', axis = alt.Axis(title = 'VADER Compound Score (Binned)'), bin=alt.Bin(extent=[-1, 1], step=0.25)),
@@ -386,7 +426,8 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                 ).properties(
                     height = 400
                 ).interactive()
-                
+
 # Write the chart
-st.subheader('VADER Compound Scores Histogram')
+st.subheader('Checking Sentiment Skewness')
+st.write('VADER Compound Scores Histogram')
 st.altair_chart(sentiment_histo, use_container_width=True)    
