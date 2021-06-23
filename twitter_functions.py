@@ -9,13 +9,13 @@ import pandas as pd
 import datetime as dt
 import base64
 import tweepy as tw
-import pandas as pd
 import yaml
 import re
 import unicodedata
 import nltk
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation as LDA
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -24,6 +24,14 @@ nltk.download('stopwords')
 import string
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
+import gensim
+from gensim.utils import simple_preprocess
+import gensim.corpora as corpora
+from pprint import pprint
+import pyLDAvis.gensim_models
+import pickle 
+import pyLDAvis
+import os
 
 #----------------------------------------------
 # DEFINE VARIABLES
@@ -159,7 +167,7 @@ def tweets_ngrams(n, top_n, df):
     result = (pd.Series(data = nltk.ngrams(words, n), name = 'frequency').value_counts())[:top_n]
     return result.to_frame()
 
-# Function 6.2 :)
+# Function 6.2
 #-----------------
 def all_ngrams(top_n, df):
     text = df.clean_text
@@ -196,10 +204,8 @@ def get_sentiment_scores(df, data_column):
     df[f'compound_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'compound'))
     return df
 
-
 # Function 8
 #----------------
-
 # Credit: https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
 
 # classify based on VADER readme rules
@@ -222,6 +228,91 @@ def sentiment_classifier(df, data_column):
 # Function 9
 #----------------
 
+# Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
+
+def lda_topics(data, number_of_topics, no_top_words):
+    # the vectorizer object will be used to transform text to vector form
+    vectorizer = CountVectorizer(max_df=0.9, min_df=25, token_pattern='\w+|\$[\d\.]+|\S+')
+
+    # apply transformation
+    tf = vectorizer.fit_transform(data).toarray()
+
+    # tf_feature_names tells us what word each column in the matrix represents
+    tf_feature_names = vectorizer.get_feature_names()
+
+    model = LDA(n_components=number_of_topics, random_state=0)
+
+    model.fit(tf)
+
+    topic_dict = {}
+    for topic_idx, topic in enumerate(model.components_):
+        topic_dict["Topic %d words" % (topic_idx)]= ['{}'.format(tf_feature_names[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+        topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+    return pd.DataFrame(topic_dict)
+
+
+# Function 10
+#----------------
+# Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
+
+def display_topics(model, feature_names, no_top_words):
+    topic_dict = {}
+    for topic_idx, topic in enumerate(model.components_):
+        topic_dict["Topic %d words" % (topic_idx)]= ['{}'.format(feature_names[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+        topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
+                        for i in topic.argsort()[:-no_top_words - 1:-1]]
+    return pd.DataFrame(topic_dict)
+
+
+# Function 11
+#---------------
+def sent_to_words(sentences):
+    for sentence in sentences:
+        # deacc=True removes punctuations
+        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
+
+#TODO: This function does not work in the streamlit app. Returns "BrokenPipeError: [Errno 32] Broken pipe"
+def LDA_viz(data):
+    data_words = list(sent_to_words(data))
+
+    # Create Dictionary
+    id2word = corpora.Dictionary(data_words)
+    # Create Corpus
+    texts = data_words
+    # Term Document Frequency
+    corpus = [id2word.doc2bow(text) for text in texts]
+
+    # number of topics
+    num_topics = 10
+    # Build LDA model
+    lda_model = gensim.models.LdaMulticore(corpus=corpus,
+                                        id2word=id2word,
+                                        num_topics=num_topics)
+    # Print the Keyword in the 10 topics
+    pprint(lda_model.print_topics())
+    doc_lda = lda_model[corpus]
+
+    # Visualize the topics
+    pyLDAvis.enable_notebook()
+    LDAvis_data_filepath = os.path.join('./results/ldavis_prepared_'+str(num_topics))
+    # # this is a bit time consuming - make the if statement True
+    # # if you want to execute visualization prep yourself
+    if 1 == 1:
+        LDAvis_prepared = pyLDAvis.gensim_models.prepare(lda_model, corpus, id2word)
+        with open(LDAvis_data_filepath, 'wb') as f:
+            pickle.dump(LDAvis_prepared, f)
+    # load the pre-prepared pyLDAvis data from disk
+    with open(LDAvis_data_filepath, 'rb') as f:
+        LDAvis_prepared = pickle.load(f)
+    pyLDAvis.save_html(LDAvis_prepared, './results/ldavis_prepared_'+ str(num_topics) +'.html')
+    
+    return LDAvis_prepared
+
+# Function 12
+#----------------
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
 
 def print_top_n_tweets(df, sent_type, num_rows):
@@ -232,7 +323,7 @@ def print_top_n_tweets(df, sent_type, num_rows):
     top_tweets.index = top_tweets.index + 1 
     return top_tweets
 
-# Function 10
+# Function 13
 #----------------
 # Function to convert  
 def word_cloud_all(df, wordcloud_words): 
@@ -247,7 +338,7 @@ def word_cloud_all(df, wordcloud_words):
     wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
     return wordcloud
 
-# Function 11
+# Function 14
 #----------------
 # Function to convert  
 def word_cloud_sentiment(df, sent_type, num_rows, wordcloud_words): 
