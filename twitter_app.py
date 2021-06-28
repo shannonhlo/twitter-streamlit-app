@@ -8,22 +8,22 @@ import streamlit as st
 from streamlit_metrics import metric, metric_row
 from PIL import Image
 import pandas as pd
-import datetime as dt
-import base64
+#import datetime as dt
+#import base64
 import tweepy as tw
 import yaml
-import string
-import re
-import unicodedata
-import nltk
+#import string
+#import re
+#import unicodedata
+#import nltk
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
-import numpy as np
+#import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-from textblob import TextBlob
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+#import seaborn as sns
+#from textblob import TextBlob
+#from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
 import altair as alt
 
@@ -46,21 +46,11 @@ st.set_page_config(layout="wide")
 
 image = Image.open('twitter_logo.png')
 
-st.image(image, width = 100)
+st.image(image, width = 50)
 
 st.title('Twitter Data App')
 st.markdown("""
-This app provides insights on tweets from the past week that contain a specific hashtag or keyword.
-""")
-
-
-# About
-#------------------------------------#
-
-expander_bar = st.beta_expander("About")
-expander_bar.markdown("""
-* **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+Search a Twitter hashtag to run the text analyzer!
 """)
 
 
@@ -79,23 +69,55 @@ col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 ## Sidebar title
 st.sidebar.header('User Inputs')
 
+with st.form(key ='Form1'):
+    user_word = st.sidebar.text_input("Enter a keyword", "stanleycup")    
+    select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
+    if select_language == 'English':
+        language = 'en'
+    if select_language == 'French':
+        language = 'fr'
+    include_retweets = st.sidebar.checkbox('Include retweets in data')
+    num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
+    with st.sidebar:
+        submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
+
 ## User input: specify hashtag or keyword used to search for relevant tweets
-user_word = st.sidebar.text_input("Enter a hashtag or keyword", "#covidcanada")
+#user_word = st.sidebar.text_input("Enter a hashtag or keyword", "#stanleycup")
 
 ## User input: select language
-select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
-if select_language == 'English':
-    language = 'en'
-if select_language == 'French':
-    language = 'fr'
+#select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
+#if select_language == 'English':
+#    language = 'en'
+#if select_language == 'French':
+#    language = 'fr'
 
 ## User input: include retweets or not
 #TODO: understand what retweets actually entails
-include_retweets = st.sidebar.checkbox('Include retweets in data')
+#include_retweets = st.sidebar.checkbox('Include retweets in data')
 
 ## User input: number of tweets to return
 #TODO: set a cap
-num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
+#num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
+
+
+# About
+#------------------------------------#
+
+## Sidebar title
+st.sidebar.header('About the App')
+expander_bar = st.sidebar.beta_expander("About")
+expander_bar.markdown("""
+* **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
+* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+""")
+
+
+# Social
+#------------------------------------#
+st.sidebar.header('Developer Contact')
+st.sidebar.write("[![Star](https://img.shields.io/github/stars/shannonhlo/twitter-streamlit-app.svg?logo=github&style=social)](https://github.com/shannonhlo/twitter-streamlit-app/branches)")
+st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/shannonhlo26?style=social)](https://twitter.com/shannonhlo26)")
+st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/DomenicFayad?style=social)](https://twitter.com/DomenicFayad)")
 
 
 #-----------------------------------#
@@ -122,7 +144,7 @@ api = tw.API(auth, wait_on_rate_limit = True)
 # define parameters for API request
 
 if include_retweets == False:
-    user_word = user_word + ' -filter:retweets'
+    user_word = '#' + user_word + ' -filter:retweets'
 
 # Scenario 1: All languages
 if select_language == 'All':
@@ -366,11 +388,11 @@ st.altair_chart(sentiment_bar, use_container_width=True)
 st.subheader('Sentiment Wordcloud')
 st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
 
-with st.form('Form1'):
+with st.form('Form2'):
     score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
     wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
     num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
-    submitted1 = st.form_submit_button('Regenerate Wordcloud')
+    submitted2 = st.form_submit_button('Regenerate Wordcloud')
 
 # Scenarios
 
@@ -445,4 +467,4 @@ no_top_words = 10
 st.subheader('Major Topics')
 st.write(tf.lda_topics(data, number_of_topics, no_top_words))
 
-st.write(tf.LDA_viz(df_tweets['clean_text'])) 
+#st.write(tf.LDA_viz(df_tweets['clean_text'])) 

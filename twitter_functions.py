@@ -2,14 +2,14 @@
 # Load dependencies
 #----------------------------------------------
 from nltk.util import bigrams
-import streamlit as st
+#import streamlit as st
 from streamlit_metrics import metric, metric_row
-from PIL import Image
+#from PIL import Image
 import pandas as pd
-import datetime as dt
+#import datetime as dt
 import base64
 import tweepy as tw
-import yaml
+#import yaml
 import re
 import unicodedata
 import nltk
@@ -17,13 +17,12 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from textblob import TextBlob
+#import matplotlib.pyplot as plt
+#import seaborn as sns
+#from textblob import TextBlob
 nltk.download('stopwords')
 import string
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
-import matplotlib.pyplot as plt
 import gensim
 from gensim.utils import simple_preprocess
 import gensim.corpora as corpora
@@ -222,7 +221,7 @@ def sentiment_classifier(df, data_column):
     values = ['Positive', 'Neutral', 'Negative']
     
     # apply
-    df['sentiment'] = np.select(conditions, values)
+    df['sentiment'] = np.select(condlist = conditions, choicelist = values)
     return df
 
 # Function 9
@@ -335,7 +334,7 @@ def word_cloud_all(df, wordcloud_words):
     # return string  
     str2 = str1.join(word_list)
     # generate word cloud
-    wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
+    wordcloud = WordCloud(max_font_size=80, max_words=wordcloud_words, background_color="white", height=150).generate(str2)
     return wordcloud
 
 # Function 14
