@@ -449,14 +449,13 @@ st.altair_chart(sentiment_histo, use_container_width=True)
 ## 3.1: TOPIC MODELLING TABLE
 #----------------------------
 data = df_tweets['clean_text']
-number_of_topics = 5
-no_top_words = 10
-min_df = 0.1 #discard words that appear in less than 25 tweets
-max_df = 0.9 #discard words that appear in more than 90% of tweets
 
 st.subheader('Major Topics')
 with st.form('Form2'):
-    number_of_topics = st.number_input('Choose the  number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+    number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+    no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+    min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
+    max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
     submitted2 = st.form_submit_button('Regenerate topics')
 
 st.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
