@@ -229,9 +229,9 @@ def sentiment_classifier(df, data_column):
 
 # Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 
-def lda_topics(data, number_of_topics, no_top_words):
+def lda_topics(data, number_of_topics, no_top_words, min_df, max_df):
     # the vectorizer object will be used to transform text to vector form
-    vectorizer = CountVectorizer(max_df=0.9, min_df=25, token_pattern='\w+|\$[\d\.]+|\S+')
+    vectorizer = CountVectorizer(max_df=max_df, min_df=min_df, token_pattern='\w+|\$[\d\.]+|\S+')
 
     # apply transformation
     tf = vectorizer.fit_transform(data).toarray()
@@ -249,7 +249,10 @@ def lda_topics(data, number_of_topics, no_top_words):
                         for i in topic.argsort()[:-no_top_words - 1:-1]]
         topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
                         for i in topic.argsort()[:-no_top_words - 1:-1]]
-    return pd.DataFrame(topic_dict)
+
+    topic_df = pd.DataFrame(topic_dict).transpose()
+
+    return pd.DataFrame(topic_df)
 
 
 # Function 10
@@ -291,7 +294,7 @@ def LDA_viz(data):
                                         id2word=id2word,
                                         num_topics=num_topics)
     # Print the Keyword in the 10 topics
-    pprint(lda_model.print_topics())
+    # pprint(lda_model.print_topics())
     doc_lda = lda_model[corpus]
 
     # Visualize the topics
