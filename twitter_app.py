@@ -6,6 +6,7 @@ from nltk.featstruct import _default_fs_class
 import twitter_functions as tf # custom functions file
 import streamlit as st
 from streamlit_metrics import metric, metric_row
+import streamlit.components.v1 as components
 from PIL import Image
 import pandas as pd
 import datetime as dt
@@ -60,7 +61,11 @@ This app provides insights on tweets from the past week that contain a specific 
 expander_bar = st.beta_expander("About")
 expander_bar.markdown("""
 * **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+* **References:**
+  * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
+  * https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
+  * https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
+  * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 """)
 
 
@@ -324,9 +329,9 @@ sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).
 st.subheader('Summary')
 metric_row(
     {
-        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),
-        "% 😐 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
         "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
+        "% 😐 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
+        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),   
     }
 )
 
@@ -410,7 +415,14 @@ top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
 
 # Show resuts as a streamlit table
 st.write('Show the top tweets!')
-st.table(top_tweets_res)
+# st.table(top_tweets_res)
+#TODO: put compound score on new line
+#TODO: account for user input # of tweets
+st.info('**Tweet #1:** ' + top_tweets_res['full_text'][1] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][1]))
+st.info('**Tweet #2:** ' + top_tweets_res['full_text'][2] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][2]))
+st.info('**Tweet #3:** ' + top_tweets_res['full_text'][3] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][3]))
+st.info('**Tweet #4:** ' + top_tweets_res['full_text'][4] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][4]))
+st.info('**Tweet #5:** ' + top_tweets_res['full_text'][5] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][5]))
 
 ## 2.5: COMPOUND SCORE HISTOGRAM
 #----------------------------
@@ -439,10 +451,20 @@ st.altair_chart(sentiment_histo, use_container_width=True)
 ## 3.1: TOPIC MODELLING TABLE
 #----------------------------
 data = df_tweets['clean_text']
-number_of_topics = 10
-no_top_words = 10
 
 st.subheader('Major Topics')
-st.write(tf.lda_topics(data, number_of_topics, no_top_words))
+with st.form('Form2'):
+    number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+    no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+    #TODO: modify user inputs for min_df and max_df to be a radio button (eg. do you want to remove spam/anomalies)
+    min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
+    #TODO: hard code max_df
+    max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
+    submitted2 = st.form_submit_button('Regenerate topics')
 
-st.write(tf.LDA_viz(df_tweets['clean_text'])) 
+#TODO: radio button to show with weights (analyst view because analyst would be interested in belongingness but avg user might not)
+st.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
+
+# st.write(tf.LDA_viz(df_tweets['clean_text'])) 
+# html_string = tf.LDA_viz(df_tweets['clean_text'])
+# components.v1.html(html_string, width=1300, height=800)
