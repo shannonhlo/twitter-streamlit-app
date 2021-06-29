@@ -27,6 +27,16 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import altair as alt
 
+# Pre-merge
+#TODO - change bar chart for num tweets per day by
+
+# Once merged
+#TODO - collapsable sections
+#TODO - show to friends
+#TODO - code refactor
+#TODO - create gif
+#TODO - post
+
 
 #----------------------------------------------
 # PART 2: DEFINE VARIABLES & FUNCTIONS
@@ -70,40 +80,19 @@ col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 st.sidebar.header('User Inputs')
 
 with st.form(key ='Form1'):
-    user_word = st.sidebar.text_input("Enter a keyword", "stanleycup")    
-    select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
-    if select_language == 'English':
-        language = 'en'
-    if select_language == 'French':
-        language = 'fr'
-    include_retweets = st.sidebar.checkbox('Include retweets in data')
-    num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
     with st.sidebar:
+        user_word = st.text_input("Enter a keyword", "habs")    
+        select_language = st.radio('Tweet language', ('All', 'English', 'French'))
+        include_retweets = st.checkbox('Include retweets in data') # what does this mean?
+        num_of_tweets = st.number_input('Maximum number of tweets', 100) # set cap?
         submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
-
-## User input: specify hashtag or keyword used to search for relevant tweets
-#user_word = st.sidebar.text_input("Enter a hashtag or keyword", "#stanleycup")
-
-## User input: select language
-#select_language = st.sidebar.radio('Tweet language', ('All', 'English', 'French'))
-#if select_language == 'English':
-#    language = 'en'
-#if select_language == 'French':
-#    language = 'fr'
-
-## User input: include retweets or not
-#TODO: understand what retweets actually entails
-#include_retweets = st.sidebar.checkbox('Include retweets in data')
-
-## User input: number of tweets to return
-#TODO: set a cap
-#num_of_tweets = st.sidebar.number_input('Maximum number of tweets', 100)
 
 
 # About
 #------------------------------------#
 
 ## Sidebar title
+st.sidebar.text("") # spacing
 st.sidebar.header('About the App')
 expander_bar = st.sidebar.beta_expander("About")
 expander_bar.markdown("""
@@ -114,6 +103,7 @@ expander_bar.markdown("""
 
 # Social
 #------------------------------------#
+st.sidebar.text("") # spacing
 st.sidebar.header('Developer Contact')
 st.sidebar.write("[![Star](https://img.shields.io/github/stars/shannonhlo/twitter-streamlit-app.svg?logo=github&style=social)](https://github.com/shannonhlo/twitter-streamlit-app/branches)")
 st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/shannonhlo26?style=social)](https://twitter.com/shannonhlo26)")
@@ -142,6 +132,11 @@ api = tw.API(auth, wait_on_rate_limit = True)
 ## Get tweets and store as dataframe
 # Reference: https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/twitter-data-in-python/
 # define parameters for API request
+
+if select_language == 'English':
+    language = 'en'
+if select_language == 'French':
+    language = 'fr'
 
 if include_retweets == False:
     user_word = '#' + user_word + ' -filter:retweets'
@@ -241,9 +236,9 @@ st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 st.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
-tweets_bar = alt.Chart(df_tweets).mark_bar().encode(
+tweets_bar = alt.Chart(df_tweets).mark_line().encode(
                     x = alt.X('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets'))#,
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets'))
                     #tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
                 ).properties(
                     height = 350

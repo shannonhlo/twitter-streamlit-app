@@ -334,7 +334,7 @@ def word_cloud_all(df, wordcloud_words):
     # return string  
     str2 = str1.join(word_list)
     # generate word cloud
-    wordcloud = WordCloud(max_font_size=80, max_words=wordcloud_words, background_color="white", height=150).generate(str2)
+    wordcloud = WordCloud(max_font_size=80, max_words=wordcloud_words, background_color="white", height=100).generate(str2)
     return wordcloud
 
 # Function 14
