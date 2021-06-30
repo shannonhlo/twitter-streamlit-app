@@ -3,6 +3,7 @@
 #----------------------------------------------
 
 from nltk.featstruct import _default_fs_class
+from numpy import e
 import twitter_functions as tf # custom functions file
 import streamlit as st
 from streamlit_metrics import metric, metric_row
@@ -27,6 +28,7 @@ import matplotlib.pyplot as plt
 #from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
 import altair as alt
+import time
 
 # Pre-merge
 #TODO - change bar chart for num tweets per day by
@@ -59,23 +61,9 @@ image = Image.open('twitter_logo.png')
 
 st.image(image, width = 50)
 
-st.title('Twitter Data App')
+st.title('Tweet Analyzer')
 st.markdown("""
-Search a Twitter hashtag to run the text analyzer!
-""")
-
-
-# About
-#------------------------------------#
-
-expander_bar = st.beta_expander("About")
-expander_bar.markdown("""
-* **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **References:**
-  * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-  * https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
-  * https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
-  * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
+Search a Twitter hashtag on the sidebar to run the tweet analyzer!
 """)
 
 
@@ -92,15 +80,16 @@ col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 #-----------------------------------#
 
 ## Sidebar title
-st.sidebar.header('User Inputs')
+st.sidebar.header('Choose Search Inputs')
 
-with st.form(key ='Form1'):
+with st.form(key ='form_1'):
     with st.sidebar:
-        user_word = st.text_input("Enter a keyword", "habs")    
-        select_language = st.radio('Tweet language', ('All', 'English', 'French'))
-        include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('Maximum number of tweets', 100) # set cap?
-        submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
+        user_word_entry = st.text_input("1. Enter a keyword", "habs")    
+        select_language = st.radio('2. Tweet language', ('All', 'English', 'French'))
+        #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
+        num_of_tweets = st.number_input('3. Maximum number of tweets', value = 100, step = 50) # set cap?
+        st.sidebar.text("") # spacing
+        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
 
 
 # About
@@ -109,10 +98,14 @@ with st.form(key ='Form1'):
 ## Sidebar title
 st.sidebar.text("") # spacing
 st.sidebar.header('About the App')
-expander_bar = st.sidebar.beta_expander("About")
-expander_bar.markdown("""
+expander_bar_1 = st.sidebar.beta_expander("About")
+expander_bar_1.markdown("""
 * **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+* **References:**
+  * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
+  * https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
+  * https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
+  * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 """)
 
 
@@ -148,13 +141,17 @@ api = tw.API(auth, wait_on_rate_limit = True)
 # Reference: https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/twitter-data-in-python/
 # define parameters for API request
 
+# User selction: English Language
 if select_language == 'English':
     language = 'en'
+
+# User selection: French Language
 if select_language == 'French':
     language = 'fr'
 
-if include_retweets == False:
-    user_word = '#' + user_word + ' -filter:retweets'
+# User selection: Retweets (assumes yes)
+#if include_retweets == False:
+user_word = '#' + user_word_entry + ' -filter:retweets'
 
 # Scenario 1: All languages
 if select_language == 'All':
@@ -211,6 +208,22 @@ df_new = df_new.rename(columns = {"created_dt": "Date",
 # 4) MAINPANEL, VISUALS
 #-----------------------------------#
 
+#my_bar = st.progress(0)
+
+#for percent_complete in range(100):
+#    time.sleep(0.1)
+#    my_bar.progress(percent_complete + 1)
+
+## Message to Users
+user_num_tweets =str(num_of_tweets)
+with st.spinner('Getting data from Twitter...'):
+    time.sleep(5)
+    st.success('Done! You searched for the last ' + 
+        user_num_tweets + 
+        ' tweets that used #' + 
+        user_word_entry)
+
+
 #----------------------------------------------------------
 ## SECTION 1: DESCRIPTIVE ANALYSIS
 #----------------------------------------------------------
@@ -227,8 +240,8 @@ st.subheader('Tweet Summary')
 metric_row(
     {
         "Number of tweets": total_tweets,
-        "Highest number of retweets": highest_retweets,
-        "Highest number of likes": highest_likes,
+        "Most Retweets on 1 post": highest_retweets,
+        "Most Likes on 1 post": highest_likes,
     }
 )
 
@@ -248,18 +261,20 @@ st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 #----------------------------
 
 # Subtitle
-st.subheader('Number of Tweets by Day')
+st.subheader('Number of Tweets by Hour of Day')
 
-# Altair chart: number of total tweets by day
-tweets_bar = alt.Chart(df_tweets).mark_line().encode(
-                    x = alt.X('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets'))
-                    #tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+# Step 1: Altair chart: number of total tweets by day
+line = alt.Chart(df_tweets).mark_line(interpolate = 'basis').encode(
+                    x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets')),
+                    color = "count(id):Q"
+                   # tooltip = [alt.Tooltip('monthdatehours(created_at):O', title = 'Tweet Date'), alt.Tooltip('count(id):Q', title = 'Number of Tweets')]
                 ).properties(
                     height = 350
-                ).interactive()
+                ).interactive()  
 
-st.altair_chart(tweets_bar, use_container_width=True)
+# Step 2: Plot with altair
+st.altair_chart(line, use_container_width=True)
 
 
 ## 1.4: FEATURE EXTRACTION BAR CHART #TODO FIX THIS
@@ -398,7 +413,7 @@ st.altair_chart(sentiment_bar, use_container_width=True)
 st.subheader('Sentiment Wordcloud')
 st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
 
-with st.form('Form2'):
+with st.form('form_2'):
     score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
     wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
     num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
@@ -480,7 +495,7 @@ st.altair_chart(sentiment_histo, use_container_width=True)
 data = df_tweets['clean_text']
 
 st.header('Major Topics')
-with st.form('Form2'):
+with st.form('form_3'):
     number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
     no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
     #TODO: modify user inputs for min_df and max_df to be a radio button (eg. do you want to remove spam/anomalies)
