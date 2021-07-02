@@ -99,7 +99,7 @@ with st.form(key ='Form1'):
         user_word = st.text_input("Enter a keyword", "habs")    
         select_language = st.radio('Tweet language', ('All', 'English', 'French'))
         include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('Maximum number of tweets', 100) # set cap?
+        num_of_tweets = st.number_input('Maximum number of tweets', min_value=1, max_value=10000, value=1000)
         submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
 
 
@@ -244,7 +244,7 @@ if st.checkbox('Show raw data'):
 st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 
-## 1.3: TWEETS BY DAY BAR CHART
+## 1.3: TWEETS BY DAY LINE CHART
 #----------------------------
 
 # Subtitle
