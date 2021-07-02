@@ -28,9 +28,6 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import altair as alt
 
-# Pre-merge
-#TODO - change bar chart for num tweets per day by
-
 # Once merged
 #TODO - collapsable sections
 #TODO - show to friends
@@ -65,20 +62,6 @@ Search a Twitter hashtag to run the text analyzer!
 """)
 
 
-# About
-#------------------------------------#
-
-expander_bar = st.beta_expander("About")
-expander_bar.markdown("""
-* **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **References:**
-  * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-  * https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
-  * https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
-  * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
-""")
-
-
 # Layout
 #------------------------------------#
 
@@ -96,10 +79,10 @@ st.sidebar.header('User Inputs')
 
 with st.form(key ='Form1'):
     with st.sidebar:
-        user_word = st.text_input("Enter a keyword", "habs")    
+        user_word = st.text_input('Enter a keyword', 'covidcanada')    
         select_language = st.radio('Tweet language', ('All', 'English', 'French'))
         include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('Maximum number of tweets', min_value=1, max_value=10000, value=1000)
+        num_of_tweets = st.number_input('Maximum number of tweets', min_value=1, max_value=10000, value=100)
         submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
 
 
@@ -112,7 +95,11 @@ st.sidebar.header('About the App')
 expander_bar = st.sidebar.beta_expander("About")
 expander_bar.markdown("""
 * **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
-* **Python libraries:** base64, pandas, streamlit, tweepy, numpy, matplotlib, seaborn, BeautifulSoup, requests, json, time, yaml
+* **References:**
+  * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
+  * https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
+  * https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
+  * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 """)
 
 
