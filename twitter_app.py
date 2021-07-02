@@ -219,23 +219,15 @@ metric_row(
     }
 )
 
-## 1.2: RAW & DOWNLOADABLE DATA TABLE
-#----------------------------
 
-# Show raw data if selected
-if st.checkbox('Show raw data'):
-    st.subheader('Raw data')
-    st.write(df_new)
+## CREATE EXPANDER FOR DESCRIPTIVE ANALYSIS
+descriptive_expander = st.beta_expander('Expand to see more descriptive analysis', expanded=False)
 
-# Click to download raw data as CSV
-st.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
-
-
-## 1.3: TWEETS BY DAY LINE CHART
+## 1.2: TWEETS BY DAY LINE CHART
 #----------------------------
 
 # Subtitle
-st.subheader('Number of Tweets by Day')
+descriptive_expander.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
 tweets_bar = alt.Chart(df_tweets).mark_line().encode(
@@ -246,7 +238,19 @@ tweets_bar = alt.Chart(df_tweets).mark_line().encode(
                     height = 350
                 ).interactive()
 
-st.altair_chart(tweets_bar, use_container_width=True)
+descriptive_expander.altair_chart(tweets_bar, use_container_width=True)
+
+
+## 1.3: RAW & DOWNLOADABLE DATA TABLE
+#----------------------------
+
+# Show raw data if selected
+if descriptive_expander.checkbox('Show raw data'):
+    descriptive_expander.subheader('Raw data')
+    descriptive_expander.write(df_new)
+
+# Click to download raw data as CSV
+descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 
 
 ## 1.4: FEATURE EXTRACTION BAR CHART #TODO FIX THIS
@@ -265,10 +269,10 @@ st.altair_chart(tweets_bar, use_container_width=True)
 #----------------------------
 
 # Subtitle
-st.subheader('Word Frequency and Ngrams')
+descriptive_expander.subheader('Word Frequency and Ngrams')
 
 # User selections
-ngram_option = st.selectbox(
+ngram_option = descriptive_expander.selectbox(
                 'Select the number of ngrams',
                 ('Single', 'Bigram', 'Trigram'))
 
@@ -293,7 +297,7 @@ ngram_visual = tf.tweets_ngrams(ngram_num, 10, df_tweets)
 ngram_visual['ngram'] = ngram_visual.index
 
 # Conditional subtitle
-st.write(ngram_nm)
+descriptive_expander.write(ngram_nm)
 
 # Altair chart: ngram word frequencies
 ngram_bar = alt.Chart(ngram_visual).mark_bar().encode(
@@ -304,7 +308,7 @@ ngram_bar = alt.Chart(ngram_visual).mark_bar().encode(
                     height = 350
                 )
 
-st.altair_chart(ngram_bar, use_container_width=True)
+descriptive_expander.altair_chart(ngram_bar, use_container_width=True)
 
 ## 2.0 SENTIMENT ANALYSIS
 #----------------------------------------------------------
@@ -358,6 +362,9 @@ if st.checkbox('Show VADER results for each Tweet'):
 st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
 
 
+## CREATE EXPANDER FOR SENTIMENT ANALYSIS
+sentiment_expander = st.beta_expander('Expand to see more sentiment analysis', expanded=False)
+
 ## 2.3: SENTIMENT BY DAY BAR CHART
 #----------------------------
 import altair as alt
@@ -376,16 +383,16 @@ sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
                 ).interactive()
 
 # Write the chart
-st.subheader('Classifying Tweet Sentiment by Day')
-st.altair_chart(sentiment_bar, use_container_width=True)
+sentiment_expander.subheader('Classifying Tweet Sentiment by Day')
+sentiment_expander.altair_chart(sentiment_bar, use_container_width=True)
 
 
 ## 2.4: ANALYZING TOP TWEETS (wordcloud + top tweets)
 #----------------------------
-st.subheader('Sentiment Wordcloud')
-st.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
+sentiment_expander.subheader('Sentiment Wordcloud')
+sentiment_expander.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
 
-with st.form('Form2'):
+with sentiment_expander.form('Form2'):
     score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
     wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
     num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
@@ -421,17 +428,17 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
-st.write('Word Cloud Generator')
-st.pyplot()
+sentiment_expander.write('Word Cloud Generator')
+sentiment_expander.pyplot()
 
 # Run the top n tweets
 top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
 
 # Show resuts as a streamlit table
-st.write('Show the top tweets!')
+sentiment_expander.write('Show the top tweets!')
 for i in range(num_tweets):
     i = i + 1
-    st.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
+    sentiment_expander.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
 
 ## 2.5: COMPOUND SCORE HISTOGRAM
 #----------------------------
@@ -449,9 +456,9 @@ sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
                 ).interactive()
 
 # Write the chart
-st.subheader('Checking Sentiment Skewness')
-st.write('VADER Compound Scores Histogram')
-st.altair_chart(sentiment_histo, use_container_width=True)      
+sentiment_expander.subheader('Checking Sentiment Skewness')
+sentiment_expander.write('VADER Compound Scores Histogram')
+sentiment_expander.altair_chart(sentiment_histo, use_container_width=True)      
 
 #----------------------------------------------------------
 ## SECTION 3: TOPIC MODEL
