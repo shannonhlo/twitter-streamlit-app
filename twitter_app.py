@@ -429,14 +429,9 @@ top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
 
 # Show resuts as a streamlit table
 st.write('Show the top tweets!')
-# st.table(top_tweets_res)
-#TODO: put compound score on new line
-#TODO: account for user input # of tweets
-st.info('**Tweet #1:** ' + top_tweets_res['full_text'][1] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][1]))
-st.info('**Tweet #2:** ' + top_tweets_res['full_text'][2] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][2]))
-st.info('**Tweet #3:** ' + top_tweets_res['full_text'][3] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][3]))
-st.info('**Tweet #4:** ' + top_tweets_res['full_text'][4] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][4]))
-st.info('**Tweet #5:** ' + top_tweets_res['full_text'][5] + ' **Compound Score:** ' + str(top_tweets_res['compound_score'][5]))
+for i in range(num_tweets):
+    i = i + 1
+    st.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
 
 ## 2.5: COMPOUND SCORE HISTOGRAM
 #----------------------------
