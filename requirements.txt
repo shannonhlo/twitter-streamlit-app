@@ -9,7 +9,7 @@ nltk==3.6.2
 PyYAML==5.4.1
 gensim==4.0.1
 pyLDAvis==3.3.1
-matplotlib==3.34
+matplotlib==3.3.4
 altair==4.1.0  
 wordcloud==1.8.1
 Image==1.5.33
