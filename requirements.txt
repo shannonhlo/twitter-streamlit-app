@@ -15,6 +15,8 @@ streamlit-metrics==0.1.0
 pandas==1.2.3
 datetime==4.3
 pillow==8.2.0
+vaderSentiment==3.3.2
+
 # from pprint import pprint
 # from nltk.util import bigrams
 # from nltk.corpus import stopwords

@@ -26,6 +26,7 @@ from streamlit_metrics import metric, metric_row
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 nltk.download('stopwords')
 
@@ -264,8 +265,6 @@ def all_ngrams(top_n, df):
 #----------------
 
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-
 sid_analyzer = SentimentIntensityAnalyzer()
 
 # Get sentiment
