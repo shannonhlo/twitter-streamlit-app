@@ -73,10 +73,19 @@ def twitter_get(select_language, user_word_entry, num_of_tweets):
     credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
 
     # Define access keys and tokens
-    consumer_key = credentials['twitter_api']['consumer_key']
-    consumer_secret = credentials['twitter_api']['consumer_secret']
-    access_token = credentials['twitter_api']['access_token']
-    access_token_secret = credentials['twitter_api']['access_token_secret']
+
+    # For dev, uses credentials.yml file stored locally
+    # consumer_key = credentials['twitter_api']['consumer_key']
+    # consumer_secret = credentials['twitter_api']['consumer_secret']
+    # access_token = credentials['twitter_api']['access_token']
+    # access_token_secret = credentials['twitter_api']['access_token_secret']
+
+    # For prod, uses Streamlit's TOML file. Configured in Advanced Settings
+    consumer_key = st.secret['consumer_key']
+    consumer_secret = st.secret['consumer_secret']
+    access_token = st.secret['access_token']
+    access_token_secret = st.secret['access_token_secret']
+
     auth = tw.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = tw.API(auth, wait_on_rate_limit = True)
