@@ -1,7 +1,4 @@
 streamlit==0.83.0
-streamlit-metrics==0.1.0
-pandas==1.2.0
-datetime==4.3
 tweepy==3.10.0
 regex==2021.4.4
 nltk==3.6.2
