@@ -4,7 +4,6 @@ pandas==1.2.0
 datetime==4.3
 tweepy==3.10.0
 regex==2021.4.4
-numpy==1.20.3
 nltk==3.6.2
 PyYAML==5.4.1
 gensim==4.0.1
