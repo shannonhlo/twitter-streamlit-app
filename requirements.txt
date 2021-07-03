@@ -1,0 +1,38 @@
+streamlit==0.83.0
+streamlit-metrics==0.1.0
+pandas==1.2.0
+datetime==4.3
+tweepy==3.10.0
+regex==2021.4.4
+numpy==1.20.3
+nltk==3.6.2
+PyYAML==5.4.1
+gensim==4.0.1
+pyLDAvis==3.3.1
+matplotlib==3.34
+altair==4.1.0  
+wordcloud==1.8.1
+Image==1.5.33
+numpy==1.21.0
+sklearn==0.0
+streamlit-metrics==0.1.0
+pandas==1.2.3
+datetime==4.3
+pillow==8.2.0
+# from pprint import pprint
+# from nltk.util import bigrams
+# from nltk.corpus import stopwords
+# from nltk.featstruct import _default_fs_class
+# from gensim.utils import simple_preprocess
+# from streamlit_metrics import metric, metric_row
+# from sklearn.feature_extraction.text import CountVectorizer
+# from sklearn.decomposition import LatentDirichletAllocation as LDA
+# from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+# from numpy import e
+# import streamlit.components.v1 as components
+# import time
+# import base64
+# import string
+# import unicodedata
+# import pickle
+# import os
