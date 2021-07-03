@@ -26,11 +26,13 @@ import matplotlib.pyplot as plt
 import altair as alt
 import time
 
+
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
 # 1.2: Load custom library
 #------------------------------------#
 import twitter_functions as tf # custom functions file
+
 
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
@@ -85,7 +87,7 @@ with st.form(key ='form_1'):
         user_word_entry = st.text_input("1. Enter a keyword", "habs")    
         select_language = st.radio('2. Tweet language', ('All', 'English', 'French'))
         #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('3. Maximum number of tweets', value = 100, step = 50) # set cap?
+        num_of_tweets = st.number_input('3. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
         st.sidebar.text("") # spacing
         submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
 
@@ -138,6 +140,8 @@ st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/DomenicFayad?
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
 # 3.1: Twitter Data ETL
+
+# Layout
 #------------------------------------#
 
 # Run function 2: Get twitter data 
@@ -152,7 +156,9 @@ df_tweets['clean_text'] = df_tweets.clean_text.apply(tf.text_clean_round1)
 ## Run function #6: Round 3 text cleaning (remove stop words)
 df_tweets.clean_text  = tf.text_clean_round3(df_tweets.clean_text)
 
+
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
 
 # 3.2: Define Key Variables
 #------------------------------------#
