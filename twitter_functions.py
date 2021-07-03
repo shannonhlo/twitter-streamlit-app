@@ -1,36 +1,34 @@
 #----------------------------------------------
 # Load dependencies
 #----------------------------------------------
-from nltk.util import bigrams
-#import streamlit as st
-from streamlit_metrics import metric, metric_row
-#from PIL import Image
 import pandas as pd
-#import datetime as dt
 import base64
 import tweepy as tw
-#import yaml
 import re
+import numpy as np
+import string
 import unicodedata
 import nltk
-from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation as LDA
-import numpy as np
-#import matplotlib.pyplot as plt
-#import seaborn as sns
-#from textblob import TextBlob
-nltk.download('stopwords')
-import string
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+import yaml
 import gensim
-from gensim.utils import simple_preprocess
-import gensim.corpora as corpora
-from pprint import pprint
 import pyLDAvis.gensim_models
 import pickle 
 import pyLDAvis
 import os
+import matplotlib.pyplot as plt
+import gensim.corpora as corpora
+import streamlit as st
+from pprint import pprint
+from nltk.util import bigrams
+from nltk.corpus import stopwords
+from gensim.utils import simple_preprocess
+from streamlit_metrics import metric, metric_row
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation as LDA
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+
+nltk.download('stopwords')
+
 
 #----------------------------------------------
 # DEFINE VARIABLES
@@ -63,7 +61,79 @@ def get_table_download_link(df):
     href = f'<a href="data:file/csv;base64,{b64}" download="tweets.csv">Download CSV file</a>'
     return href
 
-# Function 2
+# Function 2: 
+#----------------
+# Hit twitter api & add basic features & output 2 dataframes
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+def twitter_get(select_language, user_word_entry, num_of_tweets):  
+    
+    # Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
+    # Set up Twitter API access
+    # Load yml file to dictionary
+    credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
+
+    # Define access keys and tokens
+    consumer_key = credentials['twitter_api']['consumer_key']
+    consumer_secret = credentials['twitter_api']['consumer_secret']
+    access_token = credentials['twitter_api']['access_token']
+    access_token_secret = credentials['twitter_api']['access_token_secret']
+    auth = tw.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    api = tw.API(auth, wait_on_rate_limit = True)
+    
+    # Retweets (assumes yes)
+    user_word = '#' + user_word_entry + ' -filter:retweets'
+    # The following is based on user language selection
+
+    # ...English Language
+    if select_language == 'English':
+        language = 'en'
+
+    # ...French Language
+    if select_language == 'French':
+        language = 'fr'
+
+    # Retweets (assumes yes)
+    user_word = '#' + user_word_entry + ' -filter:retweets'
+
+    # Scenario 1: All languages
+    if select_language == 'All':
+        tweets = tw.Cursor(api.search,
+                            q=user_word,
+                            tweet_mode = "extended").items(num_of_tweets)
+
+    # Scenario 2: Specific language (English or French)
+    if select_language != 'All':
+        tweets = tw.Cursor(api.search,
+                            q=user_word,
+                            tweet_mode = "extended",
+                            lang=language).items(num_of_tweets)
+
+    # Store as dataframe
+    tweet_metadata = [[tweet.created_at, tweet.id, tweet.full_text, tweet.user.screen_name, tweet.retweet_count, tweet.favorite_count] for tweet in tweets]
+    df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full_text', 'user', 'rt_count', 'fav_count'])
+
+    # Add a new data variable
+    df_tweets['created_dt'] = df_tweets['created_at'].dt.date
+
+    # Add a new time variable
+    df_tweets['created_time'] = df_tweets['created_at'].dt.time
+
+    # Create a new text variable to do manipulations on 
+    df_tweets['clean_text'] = df_tweets.full_text
+
+
+    df_new = df_tweets[["created_dt", "created_time", "full_text", "user", "rt_count", "fav_count"]]
+    df_new = df_new.rename(columns = {"created_dt": "Date", 
+                                 "created_time": "Time", 
+                                  "full_text": "Tweet", 
+                                  "user": "Username", 
+                                  "rt_count": "Retweets",  
+                                  "fav_count": "Favourites"})
+
+    return df_tweets, df_new
+
+# Function 3
 #-----------------
 def feature_extract(df):
     #TODO: add emoticons and emojis to this! and other punctuation
@@ -85,7 +155,7 @@ def feature_extract(df):
     df['uppercase_ct'] = df.full_text.apply(lambda x: len([x for x in x.split() if x.isupper()]))
     return df
 
-# Function 3a
+# Function 4a
 #-------------
 def round1_text_clean(text):
     emoji_pattern = re.compile("["
@@ -121,11 +191,11 @@ def round1_text_clean(text):
     text = text.strip() # strip text
     return text
 
-# Function 3b
+# Function 4b
 #-------------
 text_clean_round1 = lambda x: round1_text_clean(x)
 
-# Function 4
+# Function 5
 #-------------
 def text_clean_round2(text):
     """
@@ -141,7 +211,7 @@ def text_clean_round2(text):
     words = re.sub(r'[^\w\s]', '', text).split()
     return [wnl.lemmatize(word) for word in words if word not in stopwords]
 
-# Function 5
+# Function 6
 #-------------
 def text_clean_round3(text):
     #TODO: add emoticons and emojis to this!
@@ -153,7 +223,7 @@ def text_clean_round3(text):
     text = text.apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
     return text
 
-# Function 6
+# Function 7a
 #-----------------
 def tweets_ngrams(n, top_n, df):
     """
@@ -166,7 +236,7 @@ def tweets_ngrams(n, top_n, df):
     result = (pd.Series(data = nltk.ngrams(words, n), name = 'frequency').value_counts())[:top_n]
     return result.to_frame()
 
-# Function 6.2
+# Function 7b
 #-----------------
 def all_ngrams(top_n, df):
     text = df.clean_text
@@ -181,7 +251,7 @@ def all_ngrams(top_n, df):
     result['ngram_nm'] = result.index
     return result
 
-# Function 7
+# Function 8
 #----------------
 
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
@@ -203,7 +273,7 @@ def get_sentiment_scores(df, data_column):
     df[f'compound_score'] = df[data_column].astype(str).apply(lambda x: get_sentiment(x,sid_analyzer,'compound'))
     return df
 
-# Function 8
+# Function 9
 #----------------
 # Credit: https://www.dataquest.io/blog/tutorial-add-column-pandas-dataframe-based-on-if-else-condition/
 
@@ -224,7 +294,7 @@ def sentiment_classifier(df, data_column):
     df['sentiment'] = np.select(condlist = conditions, choicelist = values)
     return df
 
-# Function 9
+# Function 10
 #----------------
 
 # Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
@@ -255,7 +325,7 @@ def lda_topics(data, number_of_topics, no_top_words, min_df, max_df):
     return pd.DataFrame(topic_df)
 
 
-# Function 10
+# Function 11
 #----------------
 # Credit: https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 
@@ -269,7 +339,7 @@ def display_topics(model, feature_names, no_top_words):
     return pd.DataFrame(topic_dict)
 
 
-# Function 11
+# Function 12
 #---------------
 def sent_to_words(sentences):
     for sentence in sentences:
@@ -313,7 +383,7 @@ def LDA_viz(data):
     
     return LDAvis_prepared
 
-# Function 12
+# Function 13
 #----------------
 # Credit: https://jackmckew.dev/sentiment-analysis-text-cleaning-in-python-with-vader.html
 
@@ -325,7 +395,7 @@ def print_top_n_tweets(df, sent_type, num_rows):
     top_tweets.index = top_tweets.index + 1 
     return top_tweets
 
-# Function 13
+# Function 14
 #----------------
 # Function to convert  
 def word_cloud_all(df, wordcloud_words): 
@@ -340,7 +410,7 @@ def word_cloud_all(df, wordcloud_words):
     wordcloud = WordCloud(max_font_size=80, max_words=wordcloud_words, background_color="white", height=100).generate(str2)
     return wordcloud
 
-# Function 14
+# Function 15
 #----------------
 # Function to convert  
 def word_cloud_sentiment(df, sent_type, num_rows, wordcloud_words): 
@@ -356,3 +426,77 @@ def word_cloud_sentiment(df, sent_type, num_rows, wordcloud_words):
     # generate word cloud
     wordcloud = WordCloud(max_font_size=100, max_words=wordcloud_words, background_color="white").generate(str2)
     return wordcloud
+
+# Function 16
+#----------------
+# Function to plot default wordcloud
+def default_wordcloud(text_sentiment):
+
+    # Hard coded default wordcloud (for show)
+    score_type = 'All'
+    score_type_nm = 'compound_score'
+    wordcloud_words = 15
+    top_n_tweets = 5
+   
+    # Run wordlcloud for top n tweets
+    if score_type == 'All':         
+        wordcloud = word_cloud_all(text_sentiment, wordcloud_words)
+    else:
+        wordcloud = word_cloud_sentiment(text_sentiment, score_type_nm, top_n_tweets, wordcloud_words)
+
+    # Display the generated wordcloud image:
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
+
+    # Write word cloud, need to call it still
+    st.write('Word Cloud Generator')
+    st.pyplot()
+    
+    return 
+
+# Function 16
+#----------------
+# Function to plot wordcloud that changes
+def plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_n_tweets):
+    
+    # Scenarios
+    # Scenario 1: No input (default)
+    if submitted2 is not True:
+        score_type = 'All'
+        score_type_nm = 'compound_score'
+        
+    # Scenario 2: All
+    if score_type == 'All':
+        score_type_nm = 'compound_score'
+
+    # Scenario 3: Positive
+    if score_type == 'Positive':
+        score_type_nm = 'positive_score'
+
+    # Scenario 4: Neutral
+    if score_type == 'Neutral':
+        score_type_nm = 'neutral_score'
+
+    # Scenario 5: Negative
+    if score_type == 'Negative':
+        score_type_nm = 'negative_score'
+
+    # Run wordlcloud for top n tweets
+    if score_type == 'All':         
+        wordcloud = word_cloud_all(text_sentiment, wordcloud_words)
+    else:
+        wordcloud = word_cloud_sentiment(text_sentiment, score_type_nm, top_n_tweets, wordcloud_words)
+
+    # Display the generated wordcloud image:
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
+
+    # Write word cloud, need to call it still
+    st.write('Word Cloud Generator')
+    st.pyplot()
+    
+    return 

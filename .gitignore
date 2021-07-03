@@ -5,3 +5,4 @@
 # file types
 *.yml
 *.csv
+*.pyc
