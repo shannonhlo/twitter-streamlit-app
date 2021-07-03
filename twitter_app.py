@@ -234,7 +234,7 @@ sentiment_expander = st.beta_expander('Expand to see more sentiment analysis', e
 # Altair chart: sentiment bart chart by day
 sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
                     x = alt.X('count(id):Q', stack="normalize", axis = alt.Axis(title = 'Percent of Total Tweets', format='%')),
-                    y = alt.Y('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    y = alt.Y('monthdate(created_at):O', axis = alt.Axis(title = 'Date')),
                     tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')],
                     color=alt.Color('sentiment',
                         scale=alt.Scale(
@@ -397,8 +397,10 @@ descriptive_expander = st.beta_expander('Expand to see more descriptive analysis
 descriptive_expander.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
+#TODO: y-axis increments by whole numbers, even when max number of tweets is small (ie. 5)
+#TODO: declutter x-axis. Unreadable when there are multiple dates
 line = alt.Chart(df_tweets).mark_line(interpolate = 'basis').encode(
-                    x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Date')),
                     y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets')),
                     color = "count(id):Q"
                    # tooltip = [alt.Tooltip('monthdatehours(created_at):O', title = 'Tweet Date'), alt.Tooltip('count(id):Q', title = 'Number of Tweets')]
@@ -474,8 +476,8 @@ descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allo
 #------------------------------------#
 
 # Subtitle
-st.header('🧐 Topic Modeling')
-
+st.header('🧐 Top Themes')
+#TODO: add info about topic modelling
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##
@@ -499,4 +501,5 @@ with topic_expander.form('form_3'):
     submitted2 = st.form_submit_button('Regenerate topics')
 
 #TODO: radio button to show with weights (analyst view because analyst would be interested in belongingness but avg user might not)
-topic_expander.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
+#TODO: display each topic and relevant words in its own st.warning box
+st.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
