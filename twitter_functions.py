@@ -71,7 +71,7 @@ def twitter_get(select_language, user_word_entry, num_of_tweets):
     # Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
     # Set up Twitter API access
     # Load yml file to dictionary
-    credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
+    # credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
 
     # Define access keys and tokens
 
