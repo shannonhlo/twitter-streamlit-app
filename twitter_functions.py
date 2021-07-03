@@ -213,6 +213,7 @@ def text_clean_round2(text):
     are not designated as a stop word is then lemmatized after
     encoding and basic regex parsing are performed.
     """
+    nltk.download('wordnet')
     wnl = nltk.stem.WordNetLemmatizer()
     stopwords = nltk.corpus.stopwords.words('english')
     text = (unicodedata.normalize('NFKD', text)
