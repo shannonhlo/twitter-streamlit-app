@@ -65,7 +65,7 @@ def get_table_download_link(df):
 # Function 2: 
 #----------------
 # Hit twitter api & add basic features & output 2 dataframes
-@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+# @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def twitter_get(select_language, user_word_entry, num_of_tweets):  
     
     # Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
