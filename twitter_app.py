@@ -1,99 +1,106 @@
-#----------------------------------------------
-# PART 1: LOAD DEPENDENCIES
-#----------------------------------------------
+#--------------------------------------------------
+# PART 1: LOAD DEPENDENCIES & TODO
+#--------------------------------------------------
+# - 1.1: Load libraries
+# - 1.2: Load custom library
+# - 1.3: TODO items
+#--------------------------------------------------
 
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 1.1: Load libraries
+#------------------------------------#
 from nltk.featstruct import _default_fs_class
-import twitter_functions as tf # custom functions file
+from numpy import e
 import streamlit as st
 from streamlit_metrics import metric, metric_row
 import streamlit.components.v1 as components
 from PIL import Image
 import pandas as pd
-#import datetime as dt
-#import base64
 import tweepy as tw
 import yaml
-#import string
-#import re
-#import unicodedata
-#import nltk
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
-#import numpy as np
-import matplotlib.pyplot as plt
-#import seaborn as sns
-#from textblob import TextBlob
-#from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import matplotlib.pyplot as plt
 import altair as alt
+import time
 
-# Once merged
-#TODO - collapsable sections
-#TODO - show to friends
-#TODO - code refactor
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 1.2: Load custom library
+#------------------------------------#
+import twitter_functions as tf # custom functions file
+
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 1.3: TODO items
+#------------------------------------#
 #TODO - create gif
 #TODO - post
 
+#--------------------------------------------------
+# PART 2: APP UI SETUP
+#--------------------------------------------------
+# - 2.1: Main panel setup 
+# - 2.2: Sidebar setup
+#--------------------------------------------------
 
-#----------------------------------------------
-# PART 2: DEFINE VARIABLES & FUNCTIONS
-#----------------------------------------------
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
-import twitter_functions as tf # custom functions file
-
-#------------------------------------#
-# 1) APP TITLE, DESCRIPTION & LAYOUT
-## Page expands to full width
-## Layout... Divide page to 3 columns (col1 = sidebar, col2 and col3 = page contents)
-#------------------------------------#
-st.set_page_config(layout="wide")
-
-# Title
+# 2.1: Main Panel Setup
 #------------------------------------#
 
-image = Image.open('twitter_logo.png')
-
-st.image(image, width = 50)
-
-st.title('Twitter Data App')
-st.markdown("""
-Search a Twitter hashtag to run the text analyzer!
-""")
-
-
-# Layout
-#------------------------------------#
-
+## 2.1.1: Main Layout
+##----------------------------------##
+st.set_page_config(layout="wide") # page expands to full width
 col1 = st.sidebar
 col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 
+## 2.1.2: Main Logo
+##----------------------------------##
+image = Image.open('twitter_logo.png') #logo
+st.image(image, width = 50) #logo width
 
-#-----------------------------------#
-# 2) SIDEBAR, USER INPUT
-## User to specify keyword or hashtag
-#-----------------------------------#
+## 2.1.3: Main Title
+##----------------------------------##
+st.title('Tweet Analyzer') #
+st.markdown("""
+Search a Twitter hashtag in the sidebar to run the tweet analyzer!
+""")
 
-## Sidebar title
-st.sidebar.header('User Inputs')
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
-with st.form(key ='Form1'):
-    with st.sidebar:
-        user_word = st.text_input('Enter a keyword', 'covidcanada')    
-        select_language = st.radio('Tweet language', ('All', 'English', 'French'))
-        include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('Maximum number of tweets', min_value=1, max_value=10000, value=100)
-        submitted1 = st.form_submit_button(label = 'Search Twitter 🔎')
-
-
-# About
+# 2.2: Sidebar Setup
 #------------------------------------#
 
-## Sidebar title
+## 2.1.1: Sidebar Title
+##----------------------------------##
+st.sidebar.header('Choose Search Inputs') #sidebar title
+
+## 2.2.2: Sidebar Input Fields
+##----------------------------------##
+with st.form(key ='form_1'):
+    with st.sidebar:
+        user_word_entry = st.text_input("1. Enter a keyword", "habs")    
+        select_language = st.radio('2. Tweet language', ('All', 'English', 'French'))
+        #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
+        num_of_tweets = st.number_input('3. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
+        st.sidebar.text("") # spacing
+        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
+
+## 2.2.3: Sidebar About Expanders
+##----------------------------------##
+
+## About the app title
 st.sidebar.text("") # spacing
 st.sidebar.header('About the App')
-expander_bar = st.sidebar.beta_expander("About")
-expander_bar.markdown("""
+
+# General expander section
+about_expander = st.sidebar.beta_expander("General")
+about_expander.markdown("""
 * **Creators:** [Shannon Lo](https://shannonhlo.github.io/) & [Domenic Fayad](https://www.fullstaxx.com/)
 * **References:**
   * https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
@@ -102,9 +109,20 @@ expander_bar.markdown("""
   * https://ourcodingclub.github.io/tutorials/topic-modelling-python/
 """)
 
+# Methodology expander section
+method_expander= st.sidebar.beta_expander("Methodology")
+method_expander.markdown("""
+* Applying the [VADER Sentiment](https://github.com/cjhutto/vaderSentiment) library to our text data
+* [VADER](https://github.com/cjhutto/vaderSentiment#vader-sentiment-analysis) (**V**alence **A**ware **D**ictionary and s**E**ntiment **R**easoner) = lexicon and rule-based sentiment analysis tool, specifically attuned to sentiments expressed in social media
+* [Compound score](https://github.com/cjhutto/vaderSentiment#about-the-scoring) = computed by summing the valence scores of each word in the lexicon, adjusted according to the rules, and then normalized to be between -1 (most extreme negative) and +1 (most extreme positive)
+* Positive sentiment: compound score >= 0.05
+* Neutral sentiment: (compound score > -0.05) and (compound score < 0.05)
+* Negative sentiment: compound score <= -0.05
+""")
 
-# Social
-#------------------------------------#
+
+## 2.2.4: Sidebar Social
+##----------------------------------##
 st.sidebar.text("") # spacing
 st.sidebar.header('Developer Contact')
 st.sidebar.write("[![Star](https://img.shields.io/github/stars/shannonhlo/twitter-streamlit-app.svg?logo=github&style=social)](https://github.com/shannonhlo/twitter-streamlit-app/branches)")
@@ -112,161 +130,288 @@ st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/shannonhlo26?
 st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/DomenicFayad?style=social)](https://twitter.com/DomenicFayad)")
 
 
-#-----------------------------------#
-# 3) GET DATA FROM TWITTER API
-#-----------------------------------#
+#--------------------------------------------------
+# PART 3: APP DATA SETUP
+#--------------------------------------------------
+# - 3.1: Twitter data ETL
+# - 3.2: Define key variables
+#--------------------------------------------------
 
-## Set up Twitter API access
-# Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
-# Load yml file to dictionary
-credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
-# Define access keys and tokens
-consumer_key = credentials['twitter_api']['consumer_key']
-consumer_secret = credentials['twitter_api']['consumer_secret']
-access_token = credentials['twitter_api']['access_token']
-access_token_secret = credentials['twitter_api']['access_token_secret']
+# 3.1: Twitter Data ETL
 
-auth = tw.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tw.API(auth, wait_on_rate_limit = True)
+# Layout
+#------------------------------------#
 
-## Get tweets and store as dataframe
-# Reference: https://www.earthdatascience.org/courses/use-data-open-source-python/intro-to-apis/twitter-data-in-python/
-# define parameters for API request
+# Run function 2: Get twitter data 
+df_tweets, df_new = tf.twitter_get(select_language, user_word_entry, num_of_tweets)
 
-if select_language == 'English':
-    language = 'en'
-if select_language == 'French':
-    language = 'fr'
-
-if include_retweets == False:
-    user_word = '#' + user_word + ' -filter:retweets'
-
-# Scenario 1: All languages
-if select_language == 'All':
-    tweets = tw.Cursor(api.search,
-                        q=user_word,
-                        tweet_mode = "extended").items(num_of_tweets)
-
-# Scenario 2: Specific language (English or French)
-if select_language != 'All':
-    tweets = tw.Cursor(api.search,
-                        q=user_word,
-                        tweet_mode = "extended",
-                        lang=language).items(num_of_tweets)
-
-# Store as dataframe
-tweet_metadata = [[tweet.created_at, tweet.id, tweet.full_text, tweet.user.screen_name, tweet.retweet_count, tweet.favorite_count] for tweet in tweets]
-df_tweets = pd.DataFrame(data=tweet_metadata, columns=['created_at', 'id', 'full_text', 'user', 'rt_count', 'fav_count'])
-
-# Add a new data variable
-df_tweets['created_dt'] = df_tweets['created_at'].dt.date
-
-# Add a new time variable
-df_tweets['created_time'] = df_tweets['created_at'].dt.time
-
-# Create a new text variable to do manipulations on 
-df_tweets['clean_text'] = df_tweets.full_text
-
-# Run function #2: Feature extraction
+# Run function #3: Feature extraction
 df_tweets = tf.feature_extract(df_tweets)
 
-# Run function #3: Round 1 text cleaning (convert to lower, remove numbers, @, punctuation, numbers. etc.)
+# Run function #4: Round 1 text cleaning (convert to lower, remove numbers, @, punctuation, numbers. etc.)
 df_tweets['clean_text'] = df_tweets.clean_text.apply(tf.text_clean_round1)
 
-# Run function #4: Round 2 text cleaning (create list of tokenized words)
-#TODO NOT RUNNING -- FIX?
-#df_tweets.clean_text  = tf.text_clean_round2(df_tweets.clean_text)
-
-## Run function #5: Round 3 text cleaning (remove stop words)
+## Run function #6: Round 3 text cleaning (remove stop words)
 df_tweets.clean_text  = tf.text_clean_round3(df_tweets.clean_text)
 
-# Create list of words
-words2 = df_tweets.clean_text.tolist()
 
-# Cleaned up dataframe
-df_new = df_tweets[["created_dt", "created_time", "full_text", "user", "rt_count", "fav_count"]]
-df_new = df_new.rename(columns = {"created_dt": "Date", 
-                                 "created_time": "Time", 
-                                  "full_text": "Tweet", 
-                                  "user": "Username", 
-                                  "rt_count": "Retweets",  
-                                  "fav_count": "Favourites"})
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
-#-----------------------------------#
-# 4) MAINPANEL, VISUALS
-#-----------------------------------#
 
-#----------------------------------------------------------
-## SECTION 1: DESCRIPTIVE ANALYSIS
-#----------------------------------------------------------
-
-st.header('Descriptive Analysis')
-
-## 1.1: KPI CARDS
-#----------------------------
+# 3.2: Define Key Variables
+#------------------------------------#
+user_num_tweets =str(num_of_tweets)
 total_tweets = len(df_tweets['full_text'])
 highest_retweets = max(df_tweets['rt_count'])
 highest_likes = max(df_tweets['fav_count'])
 
+
+#--------------------------------------------------
+# PART 4: APP DATA & VISUALIZATIONS
+#--------------------------------------------------
+# - 4.1: UX messaging
+# - 4.2: Sentiment analysis
+# - 4.3: Descriptive analysis
+# - 4.4: Topic model analysis
+#--------------------------------------------------
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 4.1: UX Messaging
+#------------------------------------#
+
+# Loading message for users
+with st.spinner('Getting data from Twitter...'):
+    time.sleep(5)
+    st.success('🎈Done! You searched for the last ' + 
+        user_num_tweets + 
+        ' tweets that used #' + 
+        user_word_entry)
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 4.2: Sentiment Analysis
+#------------------------------------#
+
+# Subtitle
+st.header('❤️ Sentiment Analysis')
+
+# Get sentiment scores on raw tweets
+text_sentiment = tf.get_sentiment_scores(df_tweets, 'full_text')
+
+# Add sentiment classification
+text_sentiment = tf.sentiment_classifier(df_tweets, 'compound_score')
+
+# Select columns to output
+df_sentiment = df_tweets[['created_at', 'full_text', 'sentiment', 'positive_score', 'negative_score', 'neutral_score', 'compound_score']]
+
+# Sentiment group dataframe
+sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).transpose()
+
+## 4.2.1: Summary Card Metrics
+##----------------------------------##
+
+# KPI Cards for sentiment summary
+st.subheader('Sentiment Summary')
+metric_row(
+    {
+        "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
+        "% 😑 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
+        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),   
+    }
+)
+
+## 4.2.2: Sentiment Expander Bar
+##----------------------------------##
+sentiment_expander = st.beta_expander('Expand to see more sentiment analysis', expanded=False)
+
+
+## 4.2.3: Sentiment by day bar chart
+##----------------------------------##
+
+# Altair chart: sentiment bart chart by day
+sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
+                    x = alt.X('count(id):Q', stack="normalize", axis = alt.Axis(title = 'Percent of Total Tweets', format='%')),
+                    y = alt.Y('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')],
+                    color=alt.Color('sentiment',
+                        scale=alt.Scale(
+                        domain=['Positive', 'Neutral', 'Negative'],
+                        range=['forestgreen', 'lightgray', 'indianred']))
+                ).properties(
+                    height = 400
+                ).interactive()
+
+# Write the chart
+sentiment_expander.subheader('Classifying Tweet Sentiment by Day')
+sentiment_expander.altair_chart(sentiment_bar, use_container_width=True)
+
+
+## 4.2.4: Compound Score Histogram
+##----------------------------------##
+
+# Histogram for VADER compound score
+sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
+                    x = alt.X('compound_score:O', axis = alt.Axis(title = 'VADER Compound Score (Binned)'), bin=alt.Bin(extent=[-1, 1], step=0.25)),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Tweets')),
+                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Average Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+                    color=alt.Color('sentiment',
+                        scale=alt.Scale(
+                        domain=['Positive', 'Neutral', 'Negative'],
+                        range=['forestgreen', 'lightgray', 'indianred']))
+                ).properties(
+                    height = 400
+                ).interactive()
+
+# Write the chart
+sentiment_expander.subheader('Checking Sentiment Skewness')
+sentiment_expander.write('VADER Compound Scores Histogram')
+sentiment_expander.altair_chart(sentiment_histo, use_container_width=True)    
+
+
+## 4.2.5: Download raw sentiment data
+##----------------------------------##
+
+# Show raw data if selected
+if sentiment_expander.checkbox('Show VADER results for each Tweet'):
+    sentiment_expander.subheader('Raw data')
+    sentiment_expander.write(df_sentiment)
+
+# Click to download raw data as CSV
+sentiment_expander.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 4.3: Wordclouds & Tweets
+#------------------------------------#
+
+# Subtitle
+st.header('☁️🔝 Wordcloud & Top Tweets')
+
+
+## 4.3.1: Sentiment Expander Bar
+##----------------------------------##
+
+# Setup expander
+wordcloud_expander = st.beta_expander('Expand to customize wordcloud & top tweets', expanded=False)
+
+# Sentiment Wordcloud subheader & note
+wordcloud_expander.subheader('Advanced Settings')
+
+
+## 4.3.2: Wordcloud expander submit form
+##----------------------------------##
+
+# Sentiment expander form submit for the wordcloud & top tweets
+with wordcloud_expander.form('form_2'):    
+     score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
+     wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
+     top_n_tweets =  st.number_input('Choose the top number of tweets *', 3, key = 2)
+     submitted2 = st.form_submit_button('Regenerate Wordcloud')
+
+
+## 4.3.3: Plot wordcloud
+##----------------------------------##
+tf.plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_n_tweets)
+
+
+## 4.3.4: Plot top tweets
+##----------------------------------##
+
+# Scenarios
+
+# Scenario 1: All
+if score_type == 'All':
+    score_type_nm = 'compound_score'
+    score_nickname = 'Positive'
+
+# Scenario 2: Positive
+if score_type == 'Positive':
+    score_type_nm = 'positive_score'
+    score_nickname = 'Positive'
+
+# Scenario 3: Neutral
+if score_type == 'Neutral':
+    score_type_nm = 'neutral_score'
+    score_nickname = 'Neutral'
+
+# Scenario 4: Negative
+if score_type == 'Negative':
+    score_type_nm = 'negative_score'
+    score_nickname = 'Negative'
+
+# Run the top n tweets
+top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, top_n_tweets)
+
+# Conditional title
+str_num_tweets = str(top_n_tweets)
+show_top = str('Showing top ' + 
+                str_num_tweets + 
+                ' ' +
+                score_nickname + 
+                ' tweets ranked by '+ 
+                score_type_nm)
+
+# Write conditional
+st.write(show_top)
+
+# Show resuts as a streamlit table
+for i in range(top_n_tweets):
+    i = i + 1
+    st.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
+
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
+
+# 4.4: Descriptive Analysis
+#------------------------------------#
+
+# Subtitle
+st.header('📊 Descriptive Analysis')
+
+
+## 4.4.1: Summary Metric Cards
+##----------------------------------##
+
+# KPI Cards for descriptive summary
 st.subheader('Tweet Summary')
 metric_row(
     {
         "Number of tweets": total_tweets,
-        "Highest number of retweets": highest_retweets,
-        "Highest number of likes": highest_likes,
+        "Most Retweets on 1 post": highest_retweets,
+        "Most Likes on 1 post": highest_likes,
     }
 )
 
+## 4.4.2: Descriptive Expander Bar
+##----------------------------------##
+descriptive_expander = st.beta_expander('Expand to see more descriptive analysis', 
+                                        expanded=False)
 
-## CREATE EXPANDER FOR DESCRIPTIVE ANALYSIS
-descriptive_expander = st.beta_expander('Expand to see more descriptive analysis', expanded=False)
 
-## 1.2: TWEETS BY DAY LINE CHART
-#----------------------------
+## 4.4.3: Tweets by day bar chart
+##----------------------------------##
 
 # Subtitle
 descriptive_expander.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
-tweets_bar = alt.Chart(df_tweets).mark_line().encode(
-                    x = alt.X('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets'))
-                    #tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
+line = alt.Chart(df_tweets).mark_line(interpolate = 'basis').encode(
+                    x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Month Date')),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets')),
+                    color = "count(id):Q"
+                   # tooltip = [alt.Tooltip('monthdatehours(created_at):O', title = 'Tweet Date'), alt.Tooltip('count(id):Q', title = 'Number of Tweets')]
                 ).properties(
                     height = 350
-                ).interactive()
+                ).interactive()  
 
-descriptive_expander.altair_chart(tweets_bar, use_container_width=True)
-
-
-## 1.3: RAW & DOWNLOADABLE DATA TABLE
-#----------------------------
-
-# Show raw data if selected
-if descriptive_expander.checkbox('Show raw data'):
-    descriptive_expander.subheader('Raw data')
-    descriptive_expander.write(df_new)
-
-# Click to download raw data as CSV
-descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
+# Plot with altair
+descriptive_expander.altair_chart(line, use_container_width=True)
 
 
-## 1.4: FEATURE EXTRACTION BAR CHART #TODO FIX THIS
-#----------------------------
-
-# Subtitle
-#st.subheader('Feature Extractions Counts')
-
-# Bar chart: count features
-#df_count = df_tweets[['stopword_en_ct', 'stopword_fr_ct', 'hashtag_ct', 'atsign_ct', 'link_ct', 'numeric_ct', 'uppercase_ct']]
-
-#st.bar_chart(df_count)
-
-
-## 1.5: NGRAM WORD COUNTS
-#----------------------------
+## 4.4.4: Ngram Word Counts
+##----------------------------------##
 
 # Subtitle
 descriptive_expander.subheader('Word Frequency and Ngrams')
@@ -277,6 +422,7 @@ ngram_option = descriptive_expander.selectbox(
                 ('Single', 'Bigram', 'Trigram'))
 
 # Scenarios
+
 # Scenario 1: Single ngram
 if ngram_option == 'Single':
     ngram_num = 1
@@ -310,166 +456,40 @@ ngram_bar = alt.Chart(ngram_visual).mark_bar().encode(
 
 descriptive_expander.altair_chart(ngram_bar, use_container_width=True)
 
-## 2.0 SENTIMENT ANALYSIS
-#----------------------------------------------------------
 
-# Subtitle
-st.header('Sentiment Analysis')
-
-# Expander for Methodology
-expander_bar = st.beta_expander("Methodology")
-expander_bar.markdown("""
-* Applying the [VADER Sentiment](https://github.com/cjhutto/vaderSentiment) library to our text data
-* [VADER](https://github.com/cjhutto/vaderSentiment#vader-sentiment-analysis) (**V**alence **A**ware **D**ictionary and s**E**ntiment **R**easoner) = lexicon and rule-based sentiment analysis tool, specifically attuned to sentiments expressed in social media
-* [Compound score](https://github.com/cjhutto/vaderSentiment#about-the-scoring) = computed by summing the valence scores of each word in the lexicon, adjusted according to the rules, and then normalized to be between -1 (most extreme negative) and +1 (most extreme positive)
-* Positive sentiment: compound score >= 0.05
-* Neutral sentiment: (compound score > -0.05) and (compound score < 0.05)
-* Negative sentiment: compound score <= -0.05
-""")
-
-# Get sentiment scores on raw tweets
-text_sentiment = tf.get_sentiment_scores(df_tweets, 'full_text')
-
-# Add sentiment classification
-text_sentiment = tf.sentiment_classifier(df_tweets, 'compound_score')
-
-# Select columns to output
-df_sentiment = df_tweets[['created_at', 'full_text', 'sentiment', 'positive_score', 'negative_score', 'neutral_score', 'compound_score']]
-
-
-## 2.1: SUMMARY CARDS
-#----------------------------
+## 4.4.5: Download raw descriptive data
+##----------------------------------##
 
 # Show raw data if selected
-sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).transpose()
+if descriptive_expander.checkbox('Show raw data'):
+    descriptive_expander.subheader('Raw data')
+    descriptive_expander.write(df_new)
 
-# Click to download raw data as CSV :)
-st.subheader('Summary')
-metric_row(
-    {
-        "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
-        "% 😐 Neutral Tweets": "{:.0%}".format(max(sentiment_group.Neutral)/total_tweets),
-        "% 😃 Positive Tweets": "{:.0%}".format(max(sentiment_group.Positive)/total_tweets),   
-    }
-)
+# Click to download raw data as CSV
+descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allow_html=True)
 
-## 2.2: RAW & DOWNLOADABLE DATA TABLE
-#----------------------------
-if st.checkbox('Show VADER results for each Tweet'):
-    st.subheader('Raw data')
-    st.write(df_sentiment)
+#~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
-st.markdown(tf.get_table_download_link(df_sentiment), unsafe_allow_html=True)
+# 4.5: Topic Modeling
+#------------------------------------#
+
+# Subtitle
+st.header('🧐 Topic Modeling')
 
 
-## CREATE EXPANDER FOR SENTIMENT ANALYSIS
-sentiment_expander = st.beta_expander('Expand to see more sentiment analysis', expanded=False)
+## 4.5.1: Topic Expander Bar
+##----------------------------------##
+topic_expander = st.beta_expander('Expand to see more topic modeling analysis', 
+                                        expanded=False)
 
-## 2.3: SENTIMENT BY DAY BAR CHART
-#----------------------------
-import altair as alt
+## 4.5.2: Topic Model table
+##----------------------------------##
 
-sentiment_bar = alt.Chart(df_sentiment).mark_bar().encode(
-                    x = alt.X('count(id):Q', stack="normalize", axis = alt.Axis(title = 'Percent of Total Tweets', format='%')),
-                    y = alt.Y('monthdate(created_at):O', axis = alt.Axis(title = 'Month Date')),
-                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Avg Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
-                   # y  = alt.Y('sentiment', sort = '-x'),
-                    color=alt.Color('sentiment',
-                        scale=alt.Scale(
-                        domain=['Positive', 'Neutral', 'Negative'],
-                        range=['forestgreen', 'lightgray', 'indianred']))
-                ).properties(
-                    height = 400
-                ).interactive()
-
-# Write the chart
-sentiment_expander.subheader('Classifying Tweet Sentiment by Day')
-sentiment_expander.altair_chart(sentiment_bar, use_container_width=True)
-
-
-## 2.4: ANALYZING TOP TWEETS (wordcloud + top tweets)
-#----------------------------
-sentiment_expander.subheader('Sentiment Wordcloud')
-sentiment_expander.write('''*Note: Wordcloud will run on all tweets if sentiment type is ALL*''')
-
-with sentiment_expander.form('Form2'):
-    score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
-    wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
-    num_tweets =  st.number_input('Choose the top number of tweets *', 5, key = 2)
-    submitted2 = st.form_submit_button('Regenerate Wordcloud')
-
-# Scenarios
-
-# Scenario 1: All
-if score_type == 'All':
-    score_type_nm= 'compound_score'
-
-# Scenario 2: Positive
-if score_type == 'Positive':
-    score_type_nm= 'positive_score'
-
-# Scenario 3: Neutral
-if score_type == 'Neutral':
-    score_type_nm = 'neutral_score'
-
-# Scenario 4: Negative
-if score_type == 'Negative':
-    score_type_nm = 'negative_score'
-
-# Run wordlcloud for top n tweets
-if score_type == 'All':         
-    wordcloud = tf.word_cloud_all(text_sentiment, wordcloud_words)
-else:
-    wordcloud = tf.word_cloud_sentiment(text_sentiment, score_type_nm, num_tweets, wordcloud_words)
-
-
-# Display the generated wordcloud image:
-st.set_option('deprecation.showPyplotGlobalUse', False)
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-plt.show()
-sentiment_expander.write('Word Cloud Generator')
-sentiment_expander.pyplot()
-
-# Run the top n tweets
-top_tweets_res = tf.print_top_n_tweets(df_sentiment, score_type_nm, num_tweets)
-
-# Show resuts as a streamlit table
-sentiment_expander.write('Show the top tweets!')
-for i in range(num_tweets):
-    i = i + 1
-    sentiment_expander.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
-
-## 2.5: COMPOUND SCORE HISTOGRAM
-#----------------------------
-sentiment_histo= alt.Chart(df_sentiment).mark_bar().encode(
-                    x = alt.X('compound_score:O', axis = alt.Axis(title = 'VADER Compound Score (Binned)'), bin=alt.Bin(extent=[-1, 1], step=0.25)),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Tweets')),
-                    tooltip = [alt.Tooltip('sentiment', title = 'Sentiment Group'), 'count(id):Q', alt.Tooltip('average(compound_score)', title = 'Average Compound Score'), alt.Tooltip('median(compound_score)', title = 'Median Compound Score')] ,
-                   # y  = alt.Y('sentiment', sort = '-x'),
-                    color=alt.Color('sentiment',
-                        scale=alt.Scale(
-                        domain=['Positive', 'Neutral', 'Negative'],
-                        range=['forestgreen', 'lightgray', 'indianred']))
-                ).properties(
-                    height = 400
-                ).interactive()
-
-# Write the chart
-sentiment_expander.subheader('Checking Sentiment Skewness')
-sentiment_expander.write('VADER Compound Scores Histogram')
-sentiment_expander.altair_chart(sentiment_histo, use_container_width=True)      
-
-#----------------------------------------------------------
-## SECTION 3: TOPIC MODEL
-#----------------------------------------------------------
-
-## 3.1: TOPIC MODELLING TABLE
-#----------------------------
+# Define data variable
 data = df_tweets['clean_text']
 
-st.header('Major Topics')
-with st.form('Form2'):
+# Topic model expander form submit for topic model table & visual
+with topic_expander.form('form_3'):
     number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
     no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
     #TODO: modify user inputs for min_df and max_df to be a radio button (eg. do you want to remove spam/anomalies)
@@ -479,8 +499,4 @@ with st.form('Form2'):
     submitted2 = st.form_submit_button('Regenerate topics')
 
 #TODO: radio button to show with weights (analyst view because analyst would be interested in belongingness but avg user might not)
-st.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
-
-# st.write(tf.LDA_viz(df_tweets['clean_text'])) 
-# html_string = tf.LDA_viz(df_tweets['clean_text'])
-# components.v1.html(html_string, width=1300, height=800)
+topic_expander.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
