@@ -1,6 +1,6 @@
 # folders
+/.*
 /data
-/.vscode
 /__pycache__
 
 # file types
