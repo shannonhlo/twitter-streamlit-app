@@ -316,7 +316,7 @@ def lda_topics(data, number_of_topics, no_top_words, min_df, max_df):
         topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
                         for i in topic.argsort()[:-no_top_words - 1:-1]]
 
-    topic_df = pd.DataFrame(topic_dict).transpose()
+    topic_df = pd.DataFrame(topic_dict)
 
     return pd.DataFrame(topic_df)
 
@@ -496,3 +496,24 @@ def plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_
     st.pyplot()
     
     return 
+
+# Function 17a
+#----------------
+# Function to display topics and related keywords
+def print_lda_keywords(data, number_of_topics):
+    topic_num = 1
+    for n in range(0, number_of_topics*2, 2):
+        list_topic_words = ", ".join(data.iloc[:, n])
+        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words)
+        topic_num += 1
+
+# Function 17b
+#----------------
+# Function to display topics, related keywords, and weights
+def print_lda_keywords_weight(data, number_of_topics):
+    topic_num = 1
+    for n in range(0, number_of_topics*2, 2):
+        w = n + 1
+        list_topic_words_weight = ", ".join(data.iloc[:, n] + ' (' + data.iloc[:, w] + ')')
+        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
+        topic_num += 1
