@@ -396,11 +396,10 @@ descriptive_expander = st.beta_expander('Expand to see more descriptive analysis
 descriptive_expander.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
-#TODO: y-axis increments by whole numbers, even when max number of tweets is small (ie. 5)
 #TODO: declutter x-axis. Unreadable when there are multiple dates
 line = alt.Chart(df_tweets).mark_line(interpolate = 'basis').encode(
                     x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Date')),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets')),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets', tickMinStep=1)),
                     color = "count(id):Q"
                    # tooltip = [alt.Tooltip('monthdatehours(created_at):O', title = 'Tweet Date'), alt.Tooltip('count(id):Q', title = 'Number of Tweets')]
                 ).properties(
@@ -476,7 +475,6 @@ descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allo
 
 # Subtitle
 st.header('🧐 Top Themes')
-#TODO: add info about topic modelling (eg. click for user help). Translate beta score to something more meaningful
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##
