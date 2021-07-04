@@ -18,7 +18,6 @@ import streamlit.components.v1 as components
 from PIL import Image
 import pandas as pd
 import tweepy as tw
-import yaml
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
@@ -325,7 +324,7 @@ tf.plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_n
 # Scenario 1: All
 if score_type == 'All':
     score_type_nm = 'compound_score'
-    score_nickname = 'Positive'
+    score_nickname = 'All'
 
 # Scenario 2: Positive
 if score_type == 'Positive':
@@ -357,10 +356,10 @@ show_top = str('Showing top ' +
 # Write conditional
 st.write(show_top)
 
-# Show resuts as a streamlit table
+# Show top n tweets
 for i in range(top_n_tweets):
     i = i + 1
-    st.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Compound Score:** ' + str(top_tweets_res['compound_score'][i]))
+    st.info('**Tweet #**' + str(i) + '**:** ' + top_tweets_res['full_text'][i] + '  \n **Score:** ' + str(top_tweets_res[score_type_nm][i]))
 
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
@@ -397,11 +396,10 @@ descriptive_expander = st.beta_expander('Expand to see more descriptive analysis
 descriptive_expander.subheader('Number of Tweets by Day')
 
 # Altair chart: number of total tweets by day
-#TODO: y-axis increments by whole numbers, even when max number of tweets is small (ie. 5)
 #TODO: declutter x-axis. Unreadable when there are multiple dates
 line = alt.Chart(df_tweets).mark_line(interpolate = 'basis').encode(
                     x = alt.X('monthdatehours(created_at):O', axis = alt.Axis(title = 'Date')),
-                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets')),
+                    y = alt.Y('count(id):Q', axis = alt.Axis(title = 'Number of Total Tweets', tickMinStep=1)),
                     color = "count(id):Q"
                    # tooltip = [alt.Tooltip('monthdatehours(created_at):O', title = 'Tweet Date'), alt.Tooltip('count(id):Q', title = 'Number of Tweets')]
                 ).properties(
@@ -477,7 +475,6 @@ descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allo
 
 # Subtitle
 st.header('🧐 Top Themes')
-#TODO: add info about topic modelling
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##
@@ -490,16 +487,25 @@ topic_expander = st.beta_expander('Expand to see more topic modeling analysis',
 # Define data variable
 data = df_tweets['clean_text']
 
-# Topic model expander form submit for topic model table & visual
-with topic_expander.form('form_3'):
-    number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
-    no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
-    #TODO: modify user inputs for min_df and max_df to be a radio button (eg. do you want to remove spam/anomalies)
-    min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
-    #TODO: hard code max_df
-    max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
-    submitted2 = st.form_submit_button('Regenerate topics')
+topic_view_option = topic_expander.radio('Choose display options', ('Default view', 'Analyst view (advaned options)'))
 
-#TODO: radio button to show with weights (analyst view because analyst would be interested in belongingness but avg user might not)
-#TODO: display each topic and relevant words in its own st.warning box
-st.write(tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df))
+
+
+if topic_view_option == 'Default view':
+    # Topic model expander form submit for topic model table & visual
+    with topic_expander.form('form_3'):
+        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+        submitted2 = st.form_submit_button('Regenerate topics')
+    df_lda = tf.lda_topics(data, number_of_topics, no_top_words, 0.1, 0.9)
+    tf.print_lda_keywords(df_lda, number_of_topics)
+else:
+    with topic_expander.form('form_3'):
+        number_of_topics = st.number_input('Choose the maximum number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+        no_top_words = st.number_input('Choose the maximum number of words in each topic you want to see.',min_value=1, value=10)
+        min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
+        max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
+        submitted2 = st.form_submit_button('Regenerate topics')
+    df_lda = tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df)
+    st.write('Weights shown in brackets represent how important the word is to each topic')
+    tf.print_lda_keywords_weight(df_lda, number_of_topics)

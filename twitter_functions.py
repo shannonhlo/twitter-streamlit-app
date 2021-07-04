@@ -9,7 +9,6 @@ import numpy as np
 import string
 import unicodedata
 import nltk
-import yaml
 import gensim
 import pyLDAvis.gensim_models
 import pickle 
@@ -68,20 +67,8 @@ def get_table_download_link(df):
 # @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def twitter_get(select_language, user_word_entry, num_of_tweets):  
     
-    # Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
     # Set up Twitter API access
-    # Load yml file to dictionary
-    # credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
-
     # Define access keys and tokens
-
-    # For dev, uses credentials.yml file stored locally
-    # consumer_key = credentials['twitter_api']['consumer_key']
-    # consumer_secret = credentials['twitter_api']['consumer_secret']
-    # access_token = credentials['twitter_api']['access_token']
-    # access_token_secret = credentials['twitter_api']['access_token_secret']
-
-    # For prod, uses Streamlit's TOML file. Configured in Advanced Settings
     consumer_key = st.secrets['consumer_key']
     consumer_secret = st.secrets['consumer_secret']
     access_token = st.secrets['access_token']
@@ -329,7 +316,7 @@ def lda_topics(data, number_of_topics, no_top_words, min_df, max_df):
         topic_dict["Topic %d weights" % (topic_idx)]= ['{:.1f}'.format(topic[i])
                         for i in topic.argsort()[:-no_top_words - 1:-1]]
 
-    topic_df = pd.DataFrame(topic_dict).transpose()
+    topic_df = pd.DataFrame(topic_dict)
 
     return pd.DataFrame(topic_df)
 
@@ -509,3 +496,24 @@ def plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_
     st.pyplot()
     
     return 
+
+# Function 17a
+#----------------
+# Function to display topics and related keywords
+def print_lda_keywords(data, number_of_topics):
+    topic_num = 1
+    for n in range(0, number_of_topics*2, 2):
+        list_topic_words = ", ".join(data.iloc[:, n])
+        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words)
+        topic_num += 1
+
+# Function 17b
+#----------------
+# Function to display topics, related keywords, and weights
+def print_lda_keywords_weight(data, number_of_topics):
+    topic_num = 1
+    for n in range(0, number_of_topics*2, 2):
+        w = n + 1
+        list_topic_words_weight = ", ".join(data.iloc[:, n] + ' (' + data.iloc[:, w] + ')')
+        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
+        topic_num += 1
