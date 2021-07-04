@@ -501,8 +501,8 @@ if topic_view_option == 'Default view':
     tf.print_lda_keywords(df_lda, number_of_topics)
 else:
     with topic_expander.form('form_3'):
-        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
-        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+        number_of_topics = st.number_input('Choose the maximum number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
+        no_top_words = st.number_input('Choose the maximum number of words in each topic you want to see.',min_value=1, value=10)
         min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
         max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
         submitted2 = st.form_submit_button('Regenerate topics')
