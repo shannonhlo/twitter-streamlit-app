@@ -2,7 +2,6 @@ streamlit==0.83.0
 tweepy==3.10.0
 regex==2021.4.4
 nltk==3.6.2
-PyYAML==5.4.1
 gensim==4.0.1
 pyLDAvis==3.3.1
 matplotlib==3.3.4

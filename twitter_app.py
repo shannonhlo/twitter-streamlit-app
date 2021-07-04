@@ -18,7 +18,6 @@ import streamlit.components.v1 as components
 from PIL import Image
 import pandas as pd
 import tweepy as tw
-import yaml
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
@@ -477,7 +476,7 @@ descriptive_expander.markdown(tf.get_table_download_link(df_tweets), unsafe_allo
 
 # Subtitle
 st.header('🧐 Top Themes')
-#TODO: add info about topic modelling
+#TODO: add info about topic modelling (eg. click for user help). Translate beta score to something more meaningful
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##

@@ -9,7 +9,6 @@ import numpy as np
 import string
 import unicodedata
 import nltk
-import yaml
 import gensim
 import pyLDAvis.gensim_models
 import pickle 
@@ -68,20 +67,8 @@ def get_table_download_link(df):
 # @st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def twitter_get(select_language, user_word_entry, num_of_tweets):  
     
-    # Reference: https://gist.github.com/radcliff/47af9f6238c95f6ae239
     # Set up Twitter API access
-    # Load yml file to dictionary
-    # credentials = yaml.load(open('./credentials.yml'), Loader=yaml.FullLoader)
-
     # Define access keys and tokens
-
-    # For dev, uses credentials.yml file stored locally
-    # consumer_key = credentials['twitter_api']['consumer_key']
-    # consumer_secret = credentials['twitter_api']['consumer_secret']
-    # access_token = credentials['twitter_api']['access_token']
-    # access_token_secret = credentials['twitter_api']['access_token_secret']
-
-    # For prod, uses Streamlit's TOML file. Configured in Advanced Settings
     consumer_key = st.secrets['consumer_key']
     consumer_secret = st.secrets['consumer_secret']
     access_token = st.secrets['access_token']
