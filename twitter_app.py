@@ -488,7 +488,7 @@ st.header('🧐 Top Themes')
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##
-topic_expander = st.beta_expander('Expand to see more topic modeling analysis', 
+topic_expander = st.beta_expander('Expand to see more topic modeling options', 
                                         expanded=False)
 
 ## 4.5.2: Topic Model table
@@ -497,7 +497,7 @@ topic_expander = st.beta_expander('Expand to see more topic modeling analysis',
 # Define data variable
 data = df_tweets['clean_text']
 
-topic_view_option = topic_expander.radio('Choose display options', ('Default view', 'Analyst view (advaned options)'))
+topic_view_option = topic_expander.radio('Choose display options', ('Default view', 'Analyst view (advanced options)'))
 
 
 
