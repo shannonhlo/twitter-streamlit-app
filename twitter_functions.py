@@ -504,7 +504,7 @@ def print_lda_keywords(data, number_of_topics):
     topic_num = 1
     for n in range(0, number_of_topics*2, 2):
         list_topic_words = ", ".join(data.iloc[:, n])
-        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words)
+        st.warning('**Theme #**' + str(topic_num) + '**:** ' + list_topic_words)
         topic_num += 1
 
 # Function 17b
@@ -515,5 +515,5 @@ def print_lda_keywords_weight(data, number_of_topics):
     for n in range(0, number_of_topics*2, 2):
         w = n + 1
         list_topic_words_weight = ", ".join(data.iloc[:, n] + ' (' + data.iloc[:, w] + ')')
-        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
+        st.warning('**Theme #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
         topic_num += 1
