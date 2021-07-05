@@ -494,8 +494,8 @@ topic_view_option = topic_expander.radio('Choose display options', ('Default vie
 if topic_view_option == 'Default view':
     # Topic model expander form submit for topic model table & visual
     with topic_expander.form('form_3'):
-        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
-        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=5)
+        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=5)
         submitted2 = st.form_submit_button('Regenerate topics')
     df_lda = tf.lda_topics(data, number_of_topics, no_top_words, 0.1, 0.9)
     tf.print_lda_keywords(df_lda, number_of_topics)
