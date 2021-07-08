@@ -83,10 +83,11 @@ st.sidebar.header('Choose Search Inputs') #sidebar title
 ##----------------------------------##
 with st.form(key ='form_1'):
     with st.sidebar:
-        user_word_entry = st.text_input("1. Enter a keyword", "habs")    
-        select_language = st.radio('2. Tweet language', ('All', 'English', 'French'))
+        user_word_entry = st.text_input("1. Enter one keyword", "habs", help='Ensure that keyword does not contain spaces')    
+        select_hashtag_keyword = st.radio('2. Hashtag or keyword', ('Hashtag', 'Keyword'))
+        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'))
         #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('3. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
+        num_of_tweets = st.number_input('4. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
         st.sidebar.text("") # spacing
         submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
 
@@ -144,7 +145,7 @@ st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/DomenicFayad?
 #------------------------------------#
 
 # Run function 2: Get twitter data 
-df_tweets, df_new = tf.twitter_get(select_language, user_word_entry, num_of_tweets)
+df_tweets, df_new = tf.twitter_get(select_hashtag_keyword, select_language, user_word_entry, num_of_tweets)
 
 # Run function #3: Feature extraction
 df_tweets = tf.feature_extract(df_tweets)
@@ -184,10 +185,18 @@ highest_likes = max(df_tweets['fav_count'])
 # Loading message for users
 with st.spinner('Getting data from Twitter...'):
     time.sleep(5)
-    st.success('🎈Done! You searched for the last ' + 
-        user_num_tweets + 
-        ' tweets that used #' + 
-        user_word_entry)
+    # Keyword or hashtag
+    if select_hashtag_keyword == 'Hashtag':
+        st.success('🎈Done! You searched for the last ' + 
+            user_num_tweets + 
+            ' tweets that used hashtag ' + 
+            user_word_entry)
+
+    else:
+        st.success('🎈Done! You searched for the last ' + 
+            user_num_tweets + 
+            ' tweets that used keyword ' + 
+            user_word_entry)
 
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
