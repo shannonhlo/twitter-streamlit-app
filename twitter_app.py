@@ -83,10 +83,11 @@ st.sidebar.header('Choose Search Inputs') #sidebar title
 ##----------------------------------##
 with st.form(key ='form_1'):
     with st.sidebar:
-        user_word_entry = st.text_input("1. Enter a keyword", "habs")    
-        select_language = st.radio('2. Tweet language', ('All', 'English', 'French'))
+        user_word_entry = st.text_input("1. Enter one keyword", "habs", help='Ensure that keyword does not contain spaces')    
+        select_hashtag_keyword = st.radio('2. Hashtag or keyword', ('Hashtag', 'Keyword'))
+        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'))
         #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('3. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
+        num_of_tweets = st.number_input('4. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
         st.sidebar.text("") # spacing
         submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
 
@@ -144,7 +145,7 @@ st.sidebar.write("[![Follow](https://img.shields.io/twitter/follow/DomenicFayad?
 #------------------------------------#
 
 # Run function 2: Get twitter data 
-df_tweets, df_new = tf.twitter_get(select_language, user_word_entry, num_of_tweets)
+df_tweets, df_new = tf.twitter_get(select_hashtag_keyword, select_language, user_word_entry, num_of_tweets)
 
 # Run function #3: Feature extraction
 df_tweets = tf.feature_extract(df_tweets)
@@ -184,10 +185,18 @@ highest_likes = max(df_tweets['fav_count'])
 # Loading message for users
 with st.spinner('Getting data from Twitter...'):
     time.sleep(5)
-    st.success('🎈Done! You searched for the last ' + 
-        user_num_tweets + 
-        ' tweets that used #' + 
-        user_word_entry)
+    # Keyword or hashtag
+    if select_hashtag_keyword == 'Hashtag':
+        st.success('🎈Done! You searched for the last ' + 
+            user_num_tweets + 
+            ' tweets that used hashtag ' + 
+            user_word_entry)
+
+    else:
+        st.success('🎈Done! You searched for the last ' + 
+            user_num_tweets + 
+            ' tweets that used keyword ' + 
+            user_word_entry)
 
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
 
@@ -383,6 +392,16 @@ metric_row(
     }
 )
 
+most_retweets_index = df_tweets['rt_count'].idxmax()
+most_likes_index = df_tweets['fav_count'].idxmax()
+
+if most_retweets_index == most_likes_index:
+    st.info('**Same tweet had the most retweets and likes: **' + df_tweets['full_text'][most_retweets_index])
+else:
+    st.info('**Tweet with most retweets: **' + df_tweets['full_text'][most_retweets_index])
+    st.info('**Tweet with most likes: **' + df_tweets['full_text'][most_likes_index])
+
+
 ## 4.4.2: Descriptive Expander Bar
 ##----------------------------------##
 descriptive_expander = st.beta_expander('Expand to see more descriptive analysis', 
@@ -478,7 +497,7 @@ st.header('🧐 Top Themes')
 
 ## 4.5.1: Topic Expander Bar
 ##----------------------------------##
-topic_expander = st.beta_expander('Expand to see more topic modeling analysis', 
+topic_expander = st.beta_expander('Expand to see more topic modeling options', 
                                         expanded=False)
 
 ## 4.5.2: Topic Model table
@@ -487,22 +506,22 @@ topic_expander = st.beta_expander('Expand to see more topic modeling analysis',
 # Define data variable
 data = df_tweets['clean_text']
 
-topic_view_option = topic_expander.radio('Choose display options', ('Default view', 'Analyst view (advaned options)'))
+topic_view_option = topic_expander.radio('Choose display options', ('Default view', 'Analyst view (advanced options)'))
 
 
 
 if topic_view_option == 'Default view':
     # Topic model expander form submit for topic model table & visual
     with topic_expander.form('form_3'):
-        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
-        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=10)
+        number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=5)
+        no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=5)
         submitted2 = st.form_submit_button('Regenerate topics')
     df_lda = tf.lda_topics(data, number_of_topics, no_top_words, 0.1, 0.9)
     tf.print_lda_keywords(df_lda, number_of_topics)
 else:
     with topic_expander.form('form_3'):
-        number_of_topics = st.number_input('Choose the maximum number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=10)
-        no_top_words = st.number_input('Choose the maximum number of words in each topic you want to see.',min_value=1, value=10)
+        number_of_topics = st.number_input('Choose the maximum number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=5)
+        no_top_words = st.number_input('Choose the maximum number of words in each topic you want to see.',min_value=1, value=5)
         min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
         max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
         submitted2 = st.form_submit_button('Regenerate topics')

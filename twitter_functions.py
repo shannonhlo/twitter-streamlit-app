@@ -65,7 +65,7 @@ def get_table_download_link(df):
 #----------------
 # Hit twitter api & add basic features & output 2 dataframes
 # @st.cache(suppress_st_warning=True,allow_output_mutation=True)
-def twitter_get(select_language, user_word_entry, num_of_tweets):  
+def twitter_get(select_hashtag_keyword, select_language, user_word_entry, num_of_tweets):  
     
     # Set up Twitter API access
     # Define access keys and tokens
@@ -78,8 +78,14 @@ def twitter_get(select_language, user_word_entry, num_of_tweets):
     auth.set_access_token(access_token, access_token_secret)
     api = tw.API(auth, wait_on_rate_limit = True)
     
+    # Keyword or hashtag
+    if select_hashtag_keyword == 'Hashtag':
+        user_word = '#' + user_word_entry
+    else:
+        user_word = user_word_entry
+
     # Retweets (assumes yes)
-    user_word = '#' + user_word_entry + ' -filter:retweets'
+    user_word = user_word + ' -filter:retweets'
     # The following is based on user language selection
 
     # ...English Language
@@ -91,7 +97,7 @@ def twitter_get(select_language, user_word_entry, num_of_tweets):
         language = 'fr'
 
     # Retweets (assumes yes)
-    user_word = '#' + user_word_entry + ' -filter:retweets'
+    user_word = user_word + ' -filter:retweets'
 
     # Scenario 1: All languages
     if select_language == 'All':
@@ -501,19 +507,28 @@ def plot_wordcloud(submitted2, score_type, text_sentiment, wordcloud_words, top_
 #----------------
 # Function to display topics and related keywords
 def print_lda_keywords(data, number_of_topics):
+    # sets initial topic number to 1 to be used in output
     topic_num = 1
+    # takes user input number of topics and loops over topic
     for n in range(0, number_of_topics*2, 2):
+        # joins keywords for each topic, separated by comma
         list_topic_words = ", ".join(data.iloc[:, n])
-        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words)
+        # prints output
+        st.warning('**Theme #**' + str(topic_num) + '**:** ' + list_topic_words)
+        # increments topic number by 1 so that each theme printed out will have a new number
         topic_num += 1
 
 # Function 17b
 #----------------
 # Function to display topics, related keywords, and weights
 def print_lda_keywords_weight(data, number_of_topics):
+    # sets initial topic number to 1 to be used in output
     topic_num = 1
+    # takes user input number of topics and loops over topic and weight
     for n in range(0, number_of_topics*2, 2):
         w = n + 1
         list_topic_words_weight = ", ".join(data.iloc[:, n] + ' (' + data.iloc[:, w] + ')')
-        st.warning('**Topic #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
+        # prints output
+        st.warning('**Theme #**' + str(topic_num) + '**:** ' + list_topic_words_weight)
+        # increments topic number by 1 so that each theme printed out will have a new number
         topic_num += 1
