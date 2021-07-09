@@ -84,11 +84,11 @@ st.sidebar.header('Choose Search Inputs') #sidebar title
 with st.form(key ='form_1'):
     with st.sidebar:
         user_word_entry = st.text_input("1. Enter one keyword", "stanleycup", help='Ensure that keyword does not contain spaces')    
-        select_hashtag_keyword = st.radio('2. Search as a Hashtag or keyword?', ('Hashtag', 'Keyword'), help='Selecting Hashtag will return fewer results')
-        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'), help = 'Select the language you want the Analyzer to search for')
+        select_hashtag_keyword = st.radio('2. Search hashtags, or all keywords?', ('Hashtag', 'Keyword'), help='Searching only hashtags will return fewer results')
+        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'), help = 'Select the language you want the Analyzer to search Twitter for')
         num_of_tweets = st.number_input('4. Maximum number of tweets', min_value=100, max_value=10000, value = 150, step = 50, help = 'Returns the most recent tweets within the last 7 days')
         st.sidebar.text("") # spacing
-        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀', help = 'Re-run twitter analyzer with the current inputs')
+        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀', help = 'Re-run analyzer with the current inputs')
 
 ## 2.2.3: Sidebar About Expanders
 ##----------------------------------##
