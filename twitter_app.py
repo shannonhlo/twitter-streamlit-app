@@ -60,12 +60,12 @@ col2, col3 = st.beta_columns((2,1)) # col1 is 2x greater than col2
 
 ## 2.1.2: Main Logo
 ##----------------------------------##
-image = Image.open('twitter_logo.png') #logo
-st.image(image, width = 50) #logo width
+image = Image.open('twitter_logo2.png') #logo
+st.image(image, width = 350) #logo width
 
 ## 2.1.3: Main Title
 ##----------------------------------##
-st.title('Tweet Analyzer') #
+#st.title('Tweet Analyzer') #
 st.markdown("""
 Search a Twitter hashtag in the sidebar to run the tweet analyzer!
 """)
@@ -83,13 +83,12 @@ st.sidebar.header('Choose Search Inputs') #sidebar title
 ##----------------------------------##
 with st.form(key ='form_1'):
     with st.sidebar:
-        user_word_entry = st.text_input("1. Enter one keyword", "habs", help='Ensure that keyword does not contain spaces')    
-        select_hashtag_keyword = st.radio('2. Hashtag or keyword', ('Hashtag', 'Keyword'))
-        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'))
-        #include_retweets = st.checkbox('Include retweets in data') # what does this mean?
-        num_of_tweets = st.number_input('4. Maximum number of tweets', min_value=1, max_value=10000, value = 100, step = 50)
+        user_word_entry = st.text_input("1. Enter one keyword", "stanleycup", help='Ensure that keyword does not contain spaces')    
+        select_hashtag_keyword = st.radio('2. Search hashtags, or all keywords?', ('Hashtag', 'Keyword'), help='Searching only hashtags will return fewer results')
+        select_language = st.radio('3. Tweet language', ('All', 'English', 'French'), help = 'Select the language you want the Analyzer to search Twitter for')
+        num_of_tweets = st.number_input('4. Maximum number of tweets', min_value=100, max_value=10000, value = 150, step = 50, help = 'Returns the most recent tweets within the last 7 days')
         st.sidebar.text("") # spacing
-        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀')
+        submitted1 = st.form_submit_button(label = 'Run Tweet Analyzer 🚀', help = 'Re-run analyzer with the current inputs')
 
 ## 2.2.3: Sidebar About Expanders
 ##----------------------------------##
@@ -189,13 +188,13 @@ with st.spinner('Getting data from Twitter...'):
     if select_hashtag_keyword == 'Hashtag':
         st.success('🎈Done! You searched for the last ' + 
             user_num_tweets + 
-            ' tweets that used hashtag ' + 
+            ' tweets that used #' + 
             user_word_entry)
 
     else:
         st.success('🎈Done! You searched for the last ' + 
             user_num_tweets + 
-            ' tweets that used keyword ' + 
+            ' tweets that used they keyword ' + 
             user_word_entry)
 
 #~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=~-=
@@ -222,7 +221,7 @@ sentiment_group = df_sentiment.groupby('sentiment').agg({'sentiment': 'count'}).
 ##----------------------------------##
 
 # KPI Cards for sentiment summary
-st.subheader('Sentiment Summary')
+st.subheader('Summary')
 metric_row(
     {
         "% 😡 Negative Tweets": "{:.0%}".format(max(sentiment_group.Negative)/total_tweets),
@@ -317,7 +316,7 @@ with wordcloud_expander.form('form_2'):
      score_type = st.selectbox('Select sentiment', ['All', 'Positive', 'Neutral', 'Negative'], key=1)
      wordcloud_words = st.number_input('Choose the max number of words for the word cloud', 15, key = 3)
      top_n_tweets =  st.number_input('Choose the top number of tweets *', 3, key = 2)
-     submitted2 = st.form_submit_button('Regenerate Wordcloud')
+     submitted2 = st.form_submit_button('Regenerate Wordcloud', help = 'Re-run the Wordcloud with the current inputs')
 
 
 ## 4.3.3: Plot wordcloud
@@ -515,7 +514,7 @@ if topic_view_option == 'Default view':
     with topic_expander.form('form_3'):
         number_of_topics = st.number_input('Choose the number of topics. Start with a larger number and decrease if you see topics that are similar.',min_value=1, value=5)
         no_top_words = st.number_input('Choose the number of words in each topic you want to see.',min_value=1, value=5)
-        submitted2 = st.form_submit_button('Regenerate topics')
+        submitted2 = st.form_submit_button('Regenerate topics', help = 'Re-run topic model analysis with the current inputs')
     df_lda = tf.lda_topics(data, number_of_topics, no_top_words, 0.1, 0.9)
     tf.print_lda_keywords(df_lda, number_of_topics)
 else:
@@ -524,7 +523,7 @@ else:
         no_top_words = st.number_input('Choose the maximum number of words in each topic you want to see.',min_value=1, value=5)
         min_df = st.number_input('Ignore words that appear less than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.1)
         max_df = st.number_input('Ignore words that appear more than the specified proportion (decimal number between 0 and 1).',min_value=0.0, max_value=1.0, value=0.9)
-        submitted2 = st.form_submit_button('Regenerate topics')
+        submitted2 = st.form_submit_button('Regenerate topics', help = 'Re-run topic model analysis with the current inputs')
     df_lda = tf.lda_topics(data, number_of_topics, no_top_words, min_df, max_df)
     st.write('Weights shown in brackets represent how important the word is to each topic')
     tf.print_lda_keywords_weight(df_lda, number_of_topics)
